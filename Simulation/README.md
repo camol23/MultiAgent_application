@@ -16,10 +16,10 @@
 ### Folder structure
 ---
 ```
-├── 0_isaacGym_test1
-│   ├── basic_anymal_spawn.py
+├── 0_isaacGym_test1                                    
+│   ├── basic_anymal_spawn.py                                       # First approach with no controller (minimal code) 
 |   |
-│   ├── Omni_IsaacGym_models_2022
+│   ├── Omni_IsaacGym_models_2022                                   # DRL controller models taken from OmniverseNulceus data
 │   │   ├── anymal.pth
 │   │   ├── anymal_terrain.pth
 │   │   ├── cartpole.pth
@@ -28,14 +28,14 @@
 |   |
 │   └── README.md
 |
-├── 1_IsaacGym_mpc_base
-│   ├── RL_MPC_Locomotion_custom.py
-│   ├── sim_utils.py
+├── 1_IsaacGym_mpc_base                                             
+│   ├── RL_MPC_Locomotion_custom.py                                 # Multiple agents controller by a predefined sequence of movements
+│   ├── sim_utils.py                                                # create_envs_multirobot() function
 |   |
 │   └── trajectory_lib
-│       ├── basic_commands.py
+│       ├── basic_commands.py                                       # Wrapper for Trajectory planning algoritms
 |
-├── notes.txt
+├── notes.txt                                                       # Commands, extra steps, annotations and comments in the dev.
 └── README.md
 
 ```
@@ -44,7 +44,7 @@
 
 ### Reference
 ---
-[^1] MPC-RL locomotion controller developed by Yulun Zhuang https://github.com/silvery107/rl-mpc-locomotion.git
+[^1]: [MPC-RL locomotion controller developed by Yulun Zhuang](https://github.com/silvery107/rl-mpc-locomotion.git) [^1]
 
 
 ### Extra
