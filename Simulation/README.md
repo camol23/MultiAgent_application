@@ -17,22 +17,27 @@
 ---
 ```
 ├── 0_isaacGym_test1
-│   └── basic_anymal_spawn.py
+│   ├── basic_anymal_spawn.py
+|   |
+│   ├── Omni_IsaacGym_models_2022
+│   │   ├── anymal.pth
+│   │   ├── anymal_terrain.pth
+│   │   ├── cartpole.pth
+│   │   ├── nucleus_steps.txt
+│   │   └── policy_1.pt
+|   |
+│   └── README.md
+|
 ├── 1_IsaacGym_mpc_base
 │   ├── RL_MPC_Locomotion_custom.py
+│   ├── sim_utils.py
+|   |
 │   └── trajectory_lib
 │       ├── basic_commands.py
-│       ├── __init__.py
-│       └── __pycache__
-│           ├── basic_commands.cpython-37.pyc
-│           └── __init__.cpython-37.pyc
-├── Images
-│   ├── sequence_3robot.png
-│   ├── sequence_mpc_3robots_cleaned.mp4
-│   ├── short_sequence_init.gif
-│   └── short_sequence_stop.gif
+|
 ├── notes.txt
 └── README.md
+
 ```
 
 

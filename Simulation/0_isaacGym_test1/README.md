@@ -20,4 +20,5 @@ Testing with the IsaacGym basic templates.
 
 
  ### Notes
+ ---
  1) Some testing and commands are listed in the "notes" file  
