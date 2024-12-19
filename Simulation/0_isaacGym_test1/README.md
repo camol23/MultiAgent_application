@@ -16,7 +16,7 @@ Testing with the IsaacGym basic templates.
 
   <img src="Images/IsaacGym_basic_ant_random_location.png" width=700>
 
- 3) It wasn't able to upload the model in legged_gym project, but some changes has been done to force the CPU execution.  
+ 3) **legged_gym project** some changes has been done to force the CPU execution. unfortunately, It wasn't able to upload the controller Omni-model (i.e. policy.pt / anymalTerrain.pth)   
 
 
  ### Notes
