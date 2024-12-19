@@ -8,6 +8,8 @@
 
 
 
+## Folder structure
+```
 ├── 0_isaacGym_test1
 │   └── basic_anymal_spawn.py
 ├── 1_IsaacGym_mpc_base
@@ -25,3 +27,4 @@
 │   └── short_sequence_stop.gif
 ├── notes.txt
 └── README.md
+```
