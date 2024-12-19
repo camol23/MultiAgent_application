@@ -1,5 +1,10 @@
 # 3D Simulation Code
+---
 
+# Results
+---
+### Predefine Sequence
+* IsaacGym simulation based on MPC-RL locomotion controller developed by Yulun Zhuang 
 
 
 <img src="Images/short_sequence_init.gif" width=500>
@@ -9,6 +14,7 @@
 
 
 ## Folder structure
+---
 ```
 ├── 0_isaacGym_test1
 │   └── basic_anymal_spawn.py
@@ -28,3 +34,14 @@
 ├── notes.txt
 └── README.md
 ```
+
+
+
+## Reference
+---
+1) MPC-RL locomotion controller developed by Yulun Zhuang https://github.com/silvery107/rl-mpc-locomotion.git
+
+
+## Extra
+
+* /IsaacGym_repo/rl-mpc-locomotion/RL_Environment/sim_utils.py
