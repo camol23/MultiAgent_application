@@ -17,9 +17,9 @@
 ---
 ```
 ├── 0_isaacGym_test1                                    
-│   ├── basic_anymal_spawn.py                                       # First approach with no controller (minimal code) 
+│   ├── basic_anymal_spawn.py                       # First approach with no controller (minimal code) 
 |   |
-│   ├── Omni_IsaacGym_models_2022                                   # DRL controller models taken from OmniverseNulceus data
+│   ├── Omni_IsaacGym_models_2022                   # DRL controller models taken from OmniverseNulceus data
 │   │   ├── anymal.pth
 │   │   ├── anymal_terrain.pth
 │   │   ├── cartpole.pth
@@ -29,13 +29,13 @@
 │   └── README.md
 |
 ├── 1_IsaacGym_mpc_base                                             
-│   ├── RL_MPC_Locomotion_custom.py                                 # Multiple agents controller by a predefined sequence of movements
-│   ├── sim_utils.py                                                # create_envs_multirobot() function
+│   ├── RL_MPC_Locomotion_custom.py                 # Multiple agents controller by a predefined sequence of movements
+│   ├── sim_utils.py                                # create_envs_multirobot() function
 |   |
 │   └── trajectory_lib
-│       ├── basic_commands.py                                       # Wrapper for Trajectory planning algoritms
+│       ├── basic_commands.py                       # Wrapper for Trajectory planning algoritms
 |
-├── notes.txt                                                       # Commands, extra steps, annotations and comments in the dev.
+├── notes.txt                                       # Commands, extra steps, annotations and comments in the dev.
 └── README.md
 
 ```
