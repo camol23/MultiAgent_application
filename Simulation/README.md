@@ -4,7 +4,7 @@
 ### Results
 ---
 #### Predefine Sequence
-* IsaacGym simulation based on MPC-RL locomotion controller developed by Yulun Zhuang 
+* IsaacGym simulation based on MPC-RL locomotion controller developed by Yulun Zhuang [^1] 
 
 
 <img src="Images/short_sequence_init.gif" width=500>
@@ -44,7 +44,7 @@
 
 ### Reference
 ---
-1) MPC-RL locomotion controller developed by Yulun Zhuang https://github.com/silvery107/rl-mpc-locomotion.git
+[^1] MPC-RL locomotion controller developed by Yulun Zhuang https://github.com/silvery107/rl-mpc-locomotion.git
 
 
 ### Extra
