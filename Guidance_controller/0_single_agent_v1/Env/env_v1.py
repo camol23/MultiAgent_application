@@ -110,6 +110,13 @@ class Environment:
         self.env_map.max_rect_obs_size = self.max_rect_obs_size
         if self.obstacles_type == 'random':
             self.env_map.random_obstacles(number=self.num_obstacles, seed_val=self.seed_rand_obs) #  (seed 21 / 185 / 285 / 286 ) 88
+        elif self.obstacles_type == 'warehouse_0' :
+            self.env_map.warehouse_grid(grid_number=0)
+        elif self.obstacles_type == 'warehouse_1' :
+            self.env_map.warehouse_grid(grid_number=1)
+        
+        else: 
+            self.env_map.random_obstacles(number=self.num_obstacles, seed_val=self.seed_rand_obs) 
 
         # Reference path to be Draw (indicative)
         self.env_map.path_agent = np.copy(self.reference_path)

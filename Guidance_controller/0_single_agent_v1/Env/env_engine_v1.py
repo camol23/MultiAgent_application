@@ -128,8 +128,68 @@ class Env_map:
                                                 int(y_rect), 
                                                 int(rect_w), 
                                                 int(rect_h)) )
-            print("rect = ", self.random_rect_obs_list[i])
+            print("Obst " + str(i) + " = ", self.random_rect_obs_list[i])
+
+    
+    def warehouse_grid(self, grid_number = 0):
+        '''
+            Distribute obstacles with rectangular shape in organize order
+
+                Output: 
+                    1) self.random_rect_obs_list =( (int(x_rect), 
+                                                     int(y_rect), 
+                                                     int(rect_w), 
+                                                     int(rect_h)) )
+
+        '''
+        
+        if grid_number == 0 :
+            self.grid0_warehouse()
+
+        elif grid_number == 1 :
+            self.grid0_warehouse(num_obst_row = 3, num_obst_colm = 4, distance_between_row  = 40, distance_between_colm = 40, margin_width = 200)
+
+        # DEFAULT (Warehouse Grid)
+        else:   
+            self.grid0_warehouse()
+
+
+    def grid0_warehouse(self, num_obst_row = 4, num_obst_colm = 3, distance_between_row  = 50, distance_between_colm = 50, margin_width = 250):
+        '''
+            Uniform grid with obstacles with the same same and the same distribution in the map
+        '''
+
+        print("Warehouse Map selected ")
+
+        # num_obst_row = 4                        # Number obstacles in a row
+        # num_obst_colm = 3                       # Number obstacles in a Column
+        # distance_between_row  = 50
+        # distance_between_colm = 50
+        # margin_width = 300                      # Blank distance on the sides
+
+        obst_w = int( (self.width - (2*margin_width) - ((num_obst_row - 1)*distance_between_colm) ) / num_obst_row)
+        obst_h = int( (self.height - ((num_obst_colm - 1)*distance_between_row) ) / num_obst_colm)       
+        init_x_obst = margin_width
+        init_y_obst = 0
+        
+
+        for i in range(0, num_obst_row*num_obst_colm):
+            row = int(i/num_obst_row)
+            colmn = int(i%num_obst_row)
+
+            # print(row, colmn)
+            x_pos = colmn*(distance_between_colm + obst_w) + init_x_obst
+            y_pos = row*(distance_between_row + obst_h) + init_y_obst
+
+            self.random_rect_obs_list.append( (int(x_pos), 
+                                                int(y_pos), 
+                                                int(obst_w), 
+                                                int(obst_h)) )
             
+            print("Obst " + str(i) + " = ", self.random_rect_obs_list[i])
+
+            
+
 
     def display_update(self):
         pygame.display.update()
@@ -141,7 +201,7 @@ class Env_map:
         for rect_obs in self.random_rect_obs_list:
             pygame.draw.rect(self.map, self.color_list_obs[1], 
                                 pygame.Rect( rect_obs[0], rect_obs[1], rect_obs[2], rect_obs[3] ))
-            
+                      
 
         self.draw_mouse_obs()
         self.draw_robot(robot)
