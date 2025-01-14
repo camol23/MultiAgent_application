@@ -270,6 +270,9 @@ class PSO:
             cost_rect_clollision = np.logical_not(mask_collision_rect)*self.distance + mask_collision_rect*self.distance
             self.cost_val = np.logical_not(mask_collision)*self.distance + mask_collision*self.distance + cost_rect_clollision
 
+            # cost_rect_clollision =  mask_collision_rect*self.distance
+            # self.cost_val =   mask_collision*self.distance + cost_rect_clollision + self.distance
+
     def pso_compute(self):
         self.reset_vals()
 
@@ -301,7 +304,8 @@ class PSO:
 
             # Evaluate Cost value (Updating)
             # self.fitness()                                                                              # Compute current Cost value
-            self.fitness_v2()        
+            # self.fitness_v2()      
+            self.fitness_v3()        
             best_cost_mask = self.cost_val < self.p_cost                                                  # Compare the current cost against the old value 
             self.p_cost = np.logical_not(best_cost_mask)*self.p_cost + best_cost_mask*self.cost_val
             best_cost_mask = best_cost_mask.reshape( (self.X.shape[0], 1) )

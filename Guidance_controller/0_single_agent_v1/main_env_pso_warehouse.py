@@ -2,7 +2,7 @@ import sys
 import numpy as np
 
 from Env import env_v1
-# from PSO import PSO_v1
+from PSO import PSO_v1
 from PSO import PSO_v2
 from Env.agents_v1 import follow_path_wp 
 
@@ -20,7 +20,8 @@ agents_settings = {
 map_settings = {
     'map_dimensions': (1200, 600),
     'num_obs': 30,
-    'type_obs': 'warehouse_1',                  # Random sqaure obstacles
+    'type_obs': 'warehouse_0',                  # Simple Map Grid
+    # 'type_obs': 'warehouse_1',                  # More elements Map Grid
     'max_rect_obs_size': 200,                   # maximun Obstacle size
     'seed_val_obs': 80, # 286                   # Test obstacles location
     'mouse_flag': True                          # Mouse pointer is turned in a sqaere obstacle
@@ -30,8 +31,8 @@ map_settings = {
 
 # PSO Settings
 pso_params = {
-    'iterations': 200, 
-    'w': 0.04,
+    'iterations': 600, #200, 
+    'w': 0.04, # 0.04
     'Cp': 0.2,
     'Cg': 0.1,
     'num_particles': 150, # 100
@@ -47,21 +48,23 @@ env.initialize()
 
 
 # Compute the PSO Path 
-target_pos = (1000, 100)
+target_pos = (1100, 100)
+
 # pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
-# # pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
-# pso_item.pso_compute()
+pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
+pso_item.pso_compute()
 
-# pso_item.visualization()
-# pso_item.visualization_all()
+pso_item.visualization()
+pso_item.visualization_all()
 
-# # env.env_map.path_agent = np.copy(pso_item.output_path)
-# print("Shape PSO Path", pso_item.output_path.shape)
-# env.load_path(pso_item.output_path)
+# env.env_map.path_agent = np.copy(pso_item.output_path)
+print("Shape PSO Path", pso_item.output_path.shape)
+env.load_path(pso_item.output_path)
 
 
-path = np.transpose(np.array([agents_settings['start_pos'], target_pos]))
-env.load_path(path)
+# Straitgh Line (for test with no PSO)
+# path = np.transpose(np.array([agents_settings['start_pos'], target_pos]))
+# env.load_path(path)
 
 
 while env.running_flag:
