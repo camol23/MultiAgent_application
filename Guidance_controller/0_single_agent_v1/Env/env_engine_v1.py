@@ -188,7 +188,23 @@ class Env_map:
             
             print("Obst " + str(i) + " = ", self.random_rect_obs_list[i])
 
-            
+
+    def center_box(self, obst_w = 600, obst_h = 200):
+        '''
+            Drawing a rectangle in the middle of the map
+
+            Purposes:
+                1) Test conllision functions
+
+        '''        
+
+        x_pos = self.width/2 - (obst_w/2)
+        y_pos = self.height/2 - (obst_h/2)
+
+        self.random_rect_obs_list.append( (int(x_pos), 
+                                                int(y_pos), 
+                                                int(obst_w), 
+                                                int(obst_h)) )
 
 
     def display_update(self):

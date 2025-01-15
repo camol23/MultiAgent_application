@@ -1,6 +1,7 @@
 import sys
 import numpy as np
 
+sys.path.insert(0, '/home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1')
 from Env import env_v1
 from PSO import PSO_v1
 from PSO import PSO_v2
@@ -20,7 +21,8 @@ agents_settings = {
 map_settings = {
     'map_dimensions': (1200, 600),
     'num_obs': 30,
-    'type_obs': 'random',                  # Simple Map Grid
+    'type_obs': 'center_box',                  
+    # 'type_obs': 'warehouse_0',                  # Simple Map Grid
     # 'type_obs': 'warehouse_1',                  # More elements Map Grid
     'max_rect_obs_size': 200,                   # maximun Obstacle size
     'seed_val_obs': 80, # 286                   # Test obstacles location
@@ -31,12 +33,12 @@ map_settings = {
 
 # PSO Settings
 pso_params = {
-    'iterations': 200, 
+    'iterations': 1, 
     'w': 0.04, # 0.04
     'Cp': 0.2,
     'Cg': 0.1,
-    'num_particles': 100,
-    'resolution': 5
+    'num_particles': 1, # 100
+    'resolution': 2
 }
 
 
@@ -59,7 +61,7 @@ pso_item.visualization_all()
 
 # env.env_map.path_agent = np.copy(pso_item.output_path)
 print("Shape PSO Path", pso_item.output_path.shape)
-env.load_path(pso_item.output_path)
+# env.load_path(pso_item.output_path)
 
 
 # Straitgh Line (for test with no PSO)
@@ -67,16 +69,16 @@ env.load_path(pso_item.output_path)
 # env.load_path(path)
 
 
-while env.running_flag:
+# while env.running_flag:
 
-    env.env_step()
+#     env.env_step()
 
-    # Policy Test (Action generation)
-    for agent in env.agents_obj :
-        agent.heading, agent.wp_current, stop_signal = follow_path_wp(agent, env.reference_path)
+#     # Policy Test (Action generation)
+#     for agent in env.agents_obj :
+#         agent.heading, agent.wp_current, stop_signal = follow_path_wp(agent, env.reference_path)
         
-        if stop_signal:
-            agent.move_stop()
+#         if stop_signal:
+#             agent.move_stop()
 
 
 sys.exit()
