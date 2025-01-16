@@ -421,3 +421,5 @@ class PSO:
         return larger
 
 
+    def visualization_lastAdjustment(self):
+        pass

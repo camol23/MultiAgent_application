@@ -57,6 +57,9 @@ pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos
 pso_item.pso_compute()
 
 pso_item.visualization()
+
+pso_item.collision_rect_lastCorrection(pso_item.G[0, :])
+pso_item.visualization_lastAdjustment()
 pso_item.visualization_all()
 
 # env.env_map.path_agent = np.copy(pso_item.output_path)

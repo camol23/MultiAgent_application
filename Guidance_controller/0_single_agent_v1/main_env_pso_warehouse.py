@@ -50,11 +50,15 @@ env.initialize()
 # Compute the PSO Path 
 target_pos = (1100, 100)
 
-# pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
-pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
+pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
+# pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
 pso_item.pso_compute()
 
+
 pso_item.visualization()
+
+pso_item.collision_rect_lastCorrection(pso_item.G[0, :])
+pso_item.visualization_lastAdjustment()
 pso_item.visualization_all()
 
 # env.env_map.path_agent = np.copy(pso_item.output_path)

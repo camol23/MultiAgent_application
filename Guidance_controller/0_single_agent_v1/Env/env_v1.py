@@ -116,7 +116,7 @@ class Environment:
             self.env_map.warehouse_grid(grid_number=1)
 
         elif self.obstacles_type == 'center_box' :
-            self.env_map.center_box(obst_w = 50, obst_h = 200)
+            self.env_map.center_box(obst_w = 600, obst_h = 200)
         
         else: 
             self.env_map.random_obstacles(number=self.num_obstacles, seed_val=self.seed_rand_obs) 

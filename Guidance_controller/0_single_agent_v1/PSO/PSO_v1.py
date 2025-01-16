@@ -46,6 +46,9 @@ class PSO:
         self.resolution = pso_params['resolution']          # Numbre of points in the Path
 
         self.output_path = None
+        # self.output_path_adjusted = None
+        self.last_x_output = 0
+        self.last_y_output = 0
         
         # PSO Variables
         # self.V = np.random.uniform(self.Vmin, self.Vmax, (self.num_particles, self.resolution) )          # Considering the range for the coordinate y_i
@@ -326,7 +329,169 @@ class PSO:
 
         # print("Last global best cost value = ", self.g_cost)
         self.output_path = np.stack( (self.x_fixed, self.G[0, :]) )
+
+        # self.collision_rect_lastCorrection(self.G[0, :])
     
+
+    def collision_rect_lastCorrection(self, path):
+        '''
+            Each segment intersection is turned to a parallel segment respect to the obstable
+                a) If the collision occurs with the last segment it is created a new point
+
+            Objetive: Applying corrections to the output to avoid Path intersections with obstacles 
+
+                    Input:
+                        1) Input_Path : dim(1, resolution) : The (y)s coordinates
+
+           d ___ c
+            |   |
+            |___|
+            a    b
+
+        '''
+
+        input_path = np.copy(path)
+        x_path = np.copy(self.x_fixed)
+
+        print("X Shape = ", input_path.shape, x_path.shape)   
+        # for j in range(0, input_path.shape[0]) :
+        j = 0
+        while( j < (input_path.shape[0]-1) ):
+        # for t in range(0, 3) :
+            
+            diff_yi = input_path[j+1] - input_path[j]                  # (particles, resolution-1)
+            diff_xi = x_path[j+1] - x_path[j]
+
+            x_div0 = (diff_xi == 0)
+            diff_xi = np.logical_not(x_div0)*diff_xi + x_div0*(1*1e-6)
+            m_i = diff_yi / diff_xi                            # (particles, resolution-1)
+
+            mask_div0 = (m_i == 0)
+            m_i = np.logical_not(mask_div0)*m_i + mask_div0*(1*1e-6)
+
+            b_i = input_path[j+1] - (x_path[j+1]*m_i)           # (particles, resolution-1)
+
+            # mask_ab = np.zeros_like(input_path, dtype=bool)
+            # mask_bc = np.zeros_like(input_path, dtype=bool)
+            # mask_cd = np.zeros_like(input_path, dtype=bool)
+            # mask_da = np.zeros_like(input_path, dtype=bool)
+
+            for i in range(0, len(self.obs_rect_list)):
+                
+                # print("Obstacle " + str(i) + " ", self.obs_rect_list[i])
+                # print("X = ", self.X)
+
+                # Horizontal segments (ab) and (cd) 
+                x_i = (self.obs_rect_list[i][1] - b_i)/m_i                                                                          # (particles, resolution-1) - x over the line from Obst y
+                mask_ab_i = (self.obs_rect_list[i][0] <= x_i) & (x_i <= self.obs_rect_list[i][2])                                     # x overlaps the rectangle segment?
+                mask_in_line = (x_path[j] <= x_i) & (x_i <= x_path[j+1])          # x belongs to the path segment?
+                mask_ab_i = mask_ab_i & mask_in_line
+
+                if mask_ab_i :
+                    x_path, input_path = self.make_segment_parallel(x_path, input_path, j, inter_x=x_i, inter_y=self.obs_rect_list[i][1], orientation = "horizontal")
+                    j = j - 1
+                    break
+
+                x_i = (self.obs_rect_list[i][3] - b_i)/m_i                                                                            # (particles, resolution-1)
+                mask_cd_i = (self.obs_rect_list[i][0] <= x_i) & (x_i <= self.obs_rect_list[i][2])                                     # x overlaps the rectangle segment?
+                mask_in_line = (x_path[j] <= x_i) & (x_i <= x_path[j+1])          # x belongs to the path segment?
+                # print("x_i = ", x_i, x_path[j], x_path[j+1] )
+                # print("mask_in_line ", mask_in_line, " mask_cd_i ", mask_cd_i)
+                # print()
+                mask_cd_i = mask_cd_i & mask_in_line
+
+                if mask_cd_i :
+                    x_path, input_path = self.make_segment_parallel(x_path, input_path, j, inter_x=x_i, inter_y=self.obs_rect_list[i][3], orientation = "horizontal")
+                    j = j - 1
+                    break
+                
+
+                # Vertical segments (bc) and (da) 
+                sign_mask = input_path[j+1] < input_path[j]                                                                    # The order of the segment points matters
+                sign_mask = sign_mask*(-1)
+
+                y_i = b_i + self.obs_rect_list[i][0]*m_i                                                                            # (particles, resolution-1)
+                mask_bc_i = (self.obs_rect_list[i][1] <= y_i) & (y_i <= self.obs_rect_list[i][3])                                     # x overlaps the rectangle segment?    
+                mask_in_line = (sign_mask*input_path[j] <= sign_mask*y_i) & (sign_mask*y_i <= sign_mask*input_path[j+1])         # x belongs to the path segment?
+                mask_bc_i = mask_bc_i & mask_in_line
+
+                if mask_bc_i :
+                    x_path, input_path = self.make_segment_parallel(x_path, input_path, j, inter_x=self.obs_rect_list[i][0], inter_y=y_i, orientation = "vertical")
+                    j = j - 1
+                    break
+
+                y_i = b_i + self.obs_rect_list[i][2]*m_i                                                # (particles, resolution-1)
+                mask_da_i = (self.obs_rect_list[i][1] <= y_i) & (y_i <= self.obs_rect_list[i][3])       # x overlaps the rectangle segment?     
+                mask_in_line = (sign_mask*input_path[j] <= sign_mask*y_i) & (sign_mask*y_i <= sign_mask*input_path[j+1])     # x belongs to the path segment?
+                # print("sign_mask = ", sign_mask)
+                # print("y_i = ", y_i, input_path[j], input_path[j+1] )
+                # print("mask_in_line ", mask_in_line, " mask_da_i ", mask_da_i)
+                mask_da_i = mask_da_i & mask_in_line
+
+                if mask_da_i :
+                    x_path, input_path = self.make_segment_parallel(x_path, input_path, j, inter_x=self.obs_rect_list[i][2], inter_y=y_i, orientation = "vertical")
+                    j = j - 1
+                    break
+
+                # print("J inside = ", j)
+                # print("mask_ab", mask_ab_i)
+                # print("mask_bc", mask_bc_i)
+                # print("mask_cd", mask_cd_i)
+                # print("mask_da", mask_da_i)
+                # print()
+
+            j = j + 1
+            # print("j = ", j)
+
+        # self.output_path_adjusted = np.stack( (x_path, input_path) )        
+        self.last_x_output = x_path
+        self.last_y_output = input_path
+        # return  (mask_ab | mask_bc | mask_cd | mask_da)
+
+    
+    def make_segment_parallel(self, input_x, input_y, idx, inter_x=None, inter_y=None, orientation = ""):
+        '''
+            Move the second point to turn the segment parallel to the obstacle
+
+        '''
+
+        if idx == (input_y.shape[0]-2):
+            input_x, input_y = self.create_new_point(input_x, input_y, idx, inter_x, inter_y)
+
+        if orientation == "horizontal" :
+            input_y[idx + 1] = input_y[idx]
+
+        if orientation == "vertical" :
+            input_x[idx + 1] = input_x[idx]
+
+        return input_x, input_y
+
+
+
+    def create_new_point(self, array_x, array_y, idx, x_new, y_new):
+        '''
+            Includes a new point in the array
+
+                (*) If the y coordinate is equal to the target is added a delta value to progress
+        '''
+        delta = 5
+        diff_y = 0
+
+        if array_y[idx+1] == y_new :            
+            i = 0
+            while diff_y == 0 :
+                diff_y = array_y[idx+1] - array_y[idx-i] 
+                i = i + 1
+            
+            diff_y = diff_y/diff_y 
+        
+        y_new = y_new + diff_y*delta
+
+        # Include Coordinate
+        array_y = np.insert(array_y, idx+1, y_new)
+        array_x = np.insert(array_x, idx+1, x_new)
+
+        return array_x, array_y
 
 
     def visualization(self):
@@ -398,3 +563,31 @@ class PSO:
         plt.show() 
 
 
+    def visualization_lastAdjustment(self):
+        
+        fig = plt.figure() 
+        ax = fig.add_subplot(1, 1, 1) 
+        ax.plot(self.last_x_output, self.last_y_output, color ='tab:blue') 
+        ax.scatter(self.last_x_output, self.last_y_output, c='red', alpha=0.5, linewidths=0.5)
+        
+        # for xi_dot in self.x_fixed:
+            # ax.plot( [xi_dot, xi_dot], [0, self.window_h], c ='red', alpha=0.5, linestyle='dashed', linewidth=0.5) 
+        for i in range(1, ( self.x_fixed.shape[0] )-1 ):
+            ax.plot( [self.x_fixed[i], self.x_fixed[i]], [0, self.window_h], c ='red', alpha=0.5, linestyle='dashed', linewidth=0.5) 
+            
+
+        # Draw obstacles
+        for i in range(0, len(self.obs_rect_list)):
+            rect_w = self.obs_rect_list[i][2]
+            rect_w = abs(rect_w - self.obs_rect_list[i][0])
+
+            rect_h = self.obs_rect_list[i][3]
+            rect_h = abs(rect_h - self.obs_rect_list[i][1])
+
+            x_botton = self.obs_rect_list[i][0]
+            y_botton = self.obs_rect_list[i][1]
+
+            ax.add_patch(Rectangle((x_botton, y_botton), rect_w, rect_h, facecolor='black'))
+        
+        ax.set_title('Last adjustment - best Path') 
+        plt.show() 
