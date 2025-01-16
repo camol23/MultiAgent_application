@@ -1,0 +1,25 @@
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+------------------------
+    Done
+------------------------
+
+1) Corrections and Validation of Collision by intersection function in PSO_v2
+2) 

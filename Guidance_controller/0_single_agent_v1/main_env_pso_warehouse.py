@@ -20,8 +20,8 @@ agents_settings = {
 map_settings = {
     'map_dimensions': (1200, 600),
     'num_obs': 30,
-    'type_obs': 'random',                  # Simple Map Grid
-    # 'type_obs': 'warehouse_1',                  # More elements Map Grid
+    # 'type_obs': 'random',                  # Simple Map Grid
+    'type_obs': 'warehouse_0',                  # More elements Map Grid
     'max_rect_obs_size': 200,                   # maximun Obstacle size
     'seed_val_obs': 80, # 286                   # Test obstacles location
     'mouse_flag': True                          # Mouse pointer is turned in a sqaere obstacle
@@ -36,7 +36,7 @@ pso_params = {
     'Cp': 0.2,
     'Cg': 0.1,
     'num_particles': 100,
-    'resolution': 5
+    'resolution': 10
 }
 
 

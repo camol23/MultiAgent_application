@@ -68,6 +68,9 @@ class PSO:
         # self.x_fixed = self.x_fixed.reshape( (1, self.resolution) )
         self.diff_xi = np.zeros( (self.num_particles, self.resolution-1) )
 
+        self.x_matrix = np.zeros( (self.num_particles, self.resolution) )
+        self.x_matrix[:] = self.x_fixed
+
 
     def reset_vals(self):
         # self.V = np.random.uniform(self.Vmin, self.Vmax, (self.num_particles, self.resolution) )          # Considering the range for the coordinate y_i
@@ -142,6 +145,79 @@ class PSO:
         return mask_collision
     
 
+    def collision_rect(self):
+        '''
+            
+           d ___ c
+            |   |
+            |___|
+            a    b
+
+        '''
+        print("X Shape = ", self.X.shape, self.x_matrix.shape)
+        diff_yi = self.X[:, 1:] - self.X[:, :-1]                  # (particles, resolution-1)
+
+        ones_matrix = np.ones_like(diff_yi)        
+        m_i = diff_yi / self.diff_xi                              # (particles, resolution-1)
+
+        mask_div0 = (m_i == 0)
+        m_i = np.logical_not(mask_div0)*m_i + mask_div0*(ones_matrix*1e-6)
+
+        b_i = self.X[:, 1:] - (self.x_matrix[:, 1:]*m_i)           # (particles, resolution-1)
+
+        mask_ab = np.zeros((self.num_particles, self.resolution-1), dtype=bool)
+        mask_bc = np.zeros((self.num_particles, self.resolution-1), dtype=bool)
+        mask_cd = np.zeros((self.num_particles, self.resolution-1), dtype=bool)
+        mask_da = np.zeros((self.num_particles, self.resolution-1), dtype=bool)
+
+        for i in range(0, len(self.obs_rect_list)):
+            
+            # print("Obstacle " + str(i) + " ", self.obs_rect_list[i])
+            # print("X = ", self.X)
+
+            # Horizontal segments (ab) and (cd) 
+            x_i = (self.obs_rect_list[i][1] - b_i)/m_i                                                                          # (particles, resolution-1) - x over the line from Obst y
+            mask_ab_i = (self.obs_rect_list[i][0] <= x_i) & (x_i <= self.obs_rect_list[i][2])                                     # x overlaps the rectangle segment?
+            mask_in_line = (self.x_matrix[:, :-1] <= x_i) & (x_i <= self.x_matrix[:, 1:])          # x belongs to the path segment?
+            mask_ab_i = mask_ab_i & mask_in_line
+
+            x_i = (self.obs_rect_list[i][3] - b_i)/m_i                                                                            # (particles, resolution-1)
+            mask_cd_i = (self.obs_rect_list[i][0] <= x_i) & (x_i <= self.obs_rect_list[i][2])                                     # x overlaps the rectangle segment?
+            mask_in_line = (self.x_matrix[:, :-1] <= x_i) & (x_i <= self.x_matrix[:, 1:])          # x belongs to the path segment?
+            # print("sign_mask = ", sign_mask)
+            # print("x_i = ", x_i, self.X[:, :-1, 0], self.X[:, 1:, 0] )
+            # print("mask_in_line ", mask_in_line, " mask_cd_i ", mask_cd_i)
+            # print()
+            mask_cd_i = mask_cd_i & mask_in_line
+
+            # Vertical segments (bc) and (da) 
+            sign_mask = self.X[:, 1:] < self.X[:, :-1]                                                                    # The order of the segment points matters
+            sign_mask = sign_mask*(-1)
+
+            y_i = b_i + self.obs_rect_list[i][2]*m_i                                                                            # (particles, resolution-1)
+            mask_bc_i = (self.obs_rect_list[i][1] <= y_i) & (y_i <= self.obs_rect_list[i][3])                                     # x overlaps the rectangle segment?    
+            mask_in_line = (sign_mask*self.X[:, :-1] <= sign_mask*y_i) & (sign_mask*y_i <= sign_mask*self.X[:, 1:])         # x belongs to the path segment?
+            mask_bc_i = mask_bc_i & mask_in_line
+
+            y_i = b_i + self.obs_rect_list[i][0]*m_i                                                # (particles, resolution-1)
+            mask_da_i = (self.obs_rect_list[i][1] <= y_i) & (y_i <= self.obs_rect_list[i][3])       # x overlaps the rectangle segment?     
+            mask_in_line = (sign_mask*self.X[:, :-1] <= sign_mask*y_i) & (sign_mask*y_i <= sign_mask*self.X[:, 1:])     # x belongs to the path segment?
+            # print("sign_mask = ", sign_mask)
+            # print("y_i = ", y_i, self.X[:, :-1, 1], self.X[:, 1:, 1] )
+            # print("mask_in_line ", mask_in_line, " mask_da_i ", mask_da_i)
+            mask_da_i = mask_da_i & mask_in_line
+
+            mask_ab = mask_ab | mask_ab_i
+            mask_bc = mask_bc | mask_bc_i
+            mask_cd = mask_cd | mask_cd_i
+            mask_da = mask_da | mask_da_i
+
+        print("mask_ab", mask_ab)
+        print("mask_bc", mask_bc)
+        print("mask_cd", mask_cd)
+        print("mask_da", mask_da)
+        return  (mask_ab | mask_bc | mask_cd | mask_da)
+
     def fitness(self):
 
         # Shortest Path
@@ -155,7 +231,7 @@ class PSO:
     def fitness_v2(self):
         '''
             It is included the collision as a penalty factor
-            (In process)
+            (In process), sure?
         '''
 
         # Shortest Path
@@ -172,6 +248,37 @@ class PSO:
 
         # When collided the distance is scaled to discard the path 
         self.cost_val = np.logical_not(mask_collision)*self.distance + mask_collision*self.distance
+    
+    def fitness_v3(self):
+        '''
+            It is included the collision as a penalty factor
+
+                1) Point inside of the Obstacle
+                2) Segment Intersection with the Obstacle  
+        '''
+
+        # Shortest Path
+        diff_yi = self.X[:, 1:] - self.X[:, :-1]                        # (particles, resolution-1)
+        diff_coord = np.stack( (self.diff_xi, diff_yi), axis=2 )        # (particles, resolution-1, (x,y))
+        norm_points = np.linalg.norm( diff_coord, axis=2 )              # (particles, resolution-1 )
+
+        self.distance = np.sum(norm_points, axis=1)                     # (particles)
+
+        # Apply penalty to the cost val.
+        mask_collision = self.collision_inside_obs()                    # Matrix with one values where a collision is detected
+        mask_collision = np.sum(mask_collision, axis=1) > 0             # shape(particles,)
+        mask_collision = mask_collision*2
+
+        mask_collision_rect = self.collision_rect()                          # Matrix with one values where a collision is detected
+        # print("Intersection Matrix = ", mask_collision_rect.shape," - ", mask_collision_rect)
+        mask_collision_rect = np.sum(mask_collision_rect, axis=1) > 0        # shape(particles,)
+        mask_collision_rect = mask_collision_rect*4
+
+        # When collided the distance is scaled to discard the path 
+        # self.cost_val = np.logical_not(mask_collision)*self.distance + mask_collision*self.distance
+
+        cost_rect_clollision =  mask_collision_rect*self.distance
+        self.cost_val =   mask_collision*self.distance + cost_rect_clollision + self.distance
 
 
     def pso_compute(self):
@@ -201,7 +308,8 @@ class PSO:
 
             # Evaluate Cost value (Updating)
             # self.fitness()                                                                              # Compute current Cost value
-            self.fitness_v2()        
+            # self.fitness_v2()  
+            self.fitness_v3()        
             best_cost_mask = self.cost_val < self.p_cost                                                # Compare the current cost against the old value 
             self.p_cost = np.logical_not(best_cost_mask)*self.p_cost + best_cost_mask*self.cost_val
             best_cost_mask = best_cost_mask.reshape( (self.X.shape[0], 1) )
