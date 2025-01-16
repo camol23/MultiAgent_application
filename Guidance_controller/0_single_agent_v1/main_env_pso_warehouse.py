@@ -33,7 +33,7 @@ map_settings = {
 pso_params = {
     'iterations': 200, 
     'w': 0.04, # 0.04
-    'Cp': 0.2,
+    'Cp': 0.7, #0.2,
     'Cg': 0.1,
     'num_particles': 100,
     'resolution': 10

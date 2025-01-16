@@ -154,7 +154,7 @@ class PSO:
             a    b
 
         '''
-        print("X Shape = ", self.X.shape, self.x_matrix.shape)
+        # print("X Shape = ", self.X.shape, self.x_matrix.shape)
         diff_yi = self.X[:, 1:] - self.X[:, :-1]                  # (particles, resolution-1)
 
         ones_matrix = np.ones_like(diff_yi)        
@@ -212,10 +212,10 @@ class PSO:
             mask_cd = mask_cd | mask_cd_i
             mask_da = mask_da | mask_da_i
 
-        print("mask_ab", mask_ab)
-        print("mask_bc", mask_bc)
-        print("mask_cd", mask_cd)
-        print("mask_da", mask_da)
+        # print("mask_ab", mask_ab)
+        # print("mask_bc", mask_bc)
+        # print("mask_cd", mask_cd)
+        # print("mask_da", mask_da)
         return  (mask_ab | mask_bc | mask_cd | mask_da)
 
     def fitness(self):

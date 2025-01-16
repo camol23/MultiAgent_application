@@ -12,8 +12,10 @@
 
 
 
-
-
+------------------------
+    To Do
+------------------------
+1) Check PSO_v1 for random after intersection introduction (looks better) 
 
 
 
@@ -23,3 +25,15 @@
 
 1) Corrections and Validation of Collision by intersection function in PSO_v2
 2) 
+
+
+
+------------------------
+    Considerations
+------------------------
+
+1) Last adjustment function (last action over Global Best Path)             |  
+            a) Correction for intersection                                  | Not
+            b) Create margin to the obstacle                                | Not
+            c) Smooth Path                                                  | Not
+
