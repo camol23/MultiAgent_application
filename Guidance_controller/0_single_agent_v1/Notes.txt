@@ -32,6 +32,7 @@
 
 3) collision_rect_lastCorrection Has been tested in center_box map
     a) All the intersection works 
+    b) More tested is needed
 
 
 -----------------------------
