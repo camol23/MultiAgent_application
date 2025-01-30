@@ -20,8 +20,8 @@ agents_settings = {
 map_settings = {
     'map_dimensions': (1200, 600),
     'num_obs': 30,
-    # 'type_obs': 'random',                  # Simple Map Grid
-    'type_obs': 'warehouse_0',                  # More elements Map Grid
+    'type_obs': 'random',                  # Simple Map Grid
+    # 'type_obs': 'warehouse_0',                  # More elements Map Grid
     'max_rect_obs_size': 200,                   # maximun Obstacle size
     'seed_val_obs': 80, # 286                   # Test obstacles location
     'mouse_flag': True                          # Mouse pointer is turned in a sqaere obstacle
@@ -33,7 +33,7 @@ map_settings = {
 pso_params = {
     'iterations': 200, 
     'w': 0.04, # 0.04
-    'Cp': 0.7, #0.2,
+    'Cp': 0.2, #0.2,
     'Cg': 0.1,
     'num_particles': 100,
     'resolution': 10
@@ -50,14 +50,14 @@ env.initialize()
 # Compute the PSO Path 
 target_pos = (1100, 100)
 
-pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
-# pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
+# pso_item = PSO_v1.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
+pso_item = PSO_v2.PSO(map_settings['map_dimensions'], agents_settings['start_pos'], target_pos, pso_params, env.env_map.random_rect_obs_list)
 pso_item.pso_compute()
 
 
 pso_item.visualization()
 
-pso_item.collision_rect_lastCorrection(pso_item.G[0, :])
+# pso_item.collision_rect_lastCorrection(pso_item.G[0, :])
 pso_item.visualization_lastAdjustment()
 pso_item.visualization_all()
 
