@@ -8,7 +8,7 @@ from DRL import a2c_test_v1
 # Agents Settings
 agents_settings = {
                # (x0, y0)
-    'start_pos': (100, 550),  #(50, 550),
+    'start_pos': (100, 550),                    #(50, 550),
     'num_agents': 1,
     'formation_type': 2                         # 2: V formation
 }
@@ -16,10 +16,11 @@ agents_settings = {
 # Map Settings
 map_settings = {
     'map_dimensions': (1200, 600),
-    'num_obs': 3,
-    'type_obs': None,                           # Random sqaure obstacles
+    'num_obs': 0,
+    'type_obs': 'random',                       # Random sqaure obstacles
     'seed_val_obs': 286,                        # Test obstacles location
-    'mouse_flag': True                          # Mouse pointer is turned in a sqaere obstacle
+    'mouse_flag': True,                         # Mouse pointer is turned in a sqaere obstacle
+    'max_rect_obs_size': 200                    # maximun Obstacle size
 }
 
 
@@ -45,7 +46,7 @@ env.max_steps = 500
 
 for i in range(0, num_iterations):
 
-    # It shoud be in a reset function
+    # *It shoud be in a reset function*
     states = np.zeros((1, 1, 2))
     states_steps = np.zeros((1, 1, 2))
     rewards = np.zeros((1, 1))

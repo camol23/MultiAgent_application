@@ -6,6 +6,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 '''
+    * V_1.2 : It's made to apply some possible corrections
+                over V_1.0  
+
     Action Space: 
                     1) Move to the ritgh (5 degrees)
                     2) Move to the left (5 degrees) 
@@ -69,6 +72,7 @@ class drl_model:
         # record lists
         self.reward_records = []
         self.global_steps_T = 0
+        self.TD_target_record = None
 
 
 
@@ -101,6 +105,62 @@ class drl_model:
         self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
 
 
+    def TD_target_1(rewards_list, gamma, reverse=False):
+        '''
+            
+            reverse:
+                a) True: cum_rewards goes from r_[t_last] to r_[0] 
+                b) True: cum_rewards goes from r_[0] to r_[t_last] 
+        '''
+
+        cum_rewards = np.zeros_like(rewards_list)
+        reward_len = len(rewards_list)
+        for j in reversed(range(reward_len)):
+            cum_rewards[j] = rewards_list[j] + (cum_rewards[j+1]*gamma if j+1 < reward_len else 0)
+
+        if reverse :
+            cum_rewards = np.flip(cum_rewards)
+
+        return cum_rewards
+    
+
+    def TD_target_2(self, states, rewards_list, gamma):
+        '''
+            Use Critic network to compute V( S_[t+1] )
+        '''
+
+        values = self.critic_model(states).detach()
+
+        # G = r_[t] + gamma * V(S_[t+1])
+        td_target = np.zeros_like(rewards_list)
+        td_target[0:-1] = rewards_list[0:-1] + gamma*values[1:] 
+
+        # V(S_[last+1]) = 0
+        td_target[-1] = rewards_list[-1] 
+
+        return td_target
+
+
+
+    def TD_target_3(self, values, rewards_list, gamma):
+        '''
+            Extract V( S_[t+1] ) from V(S_[t]) vector
+
+                values: V( S_[t+1] )
+        '''
+        
+        values_next = values.detach()
+        
+        # G = r_[t] + gamma * V(S_[t+1])
+        td_target = np.zeros_like(rewards_list)
+        td_target[0:-1] = rewards_list[0:-1] + gamma*values_next[1:] 
+        
+        # V(S_[last+1]) = 0
+        td_target[-1] = rewards_list[-1] 
+
+        return td_target
+
+
     def training_a2c(self, states_list, actions_list, rewards_list):
         '''
             Compute Losses, gradients, and update weigths
@@ -108,34 +168,29 @@ class drl_model:
             Note:
                 1) One Iteration
         '''
-        gamma = 0.99                                    # Discount factor
 
-
-        #
-        # Get cumulative rewards (Return)
-        #
-        cum_rewards = np.zeros_like(rewards_list)
-        reward_len = len(rewards_list)
-        for j in reversed(range(reward_len)):
-            cum_rewards[j] = rewards_list[j] + (cum_rewards[j+1]*gamma if j+1 < reward_len else 0)
-
-        #
-        # Train (optimize parameters)
-        #
-
-        # Optimize value loss (Critic)
-        self.opt_critic.zero_grad()
-
+        gamma = 0.99                                                                 # Discount factor
         states = torch.tensor(states_list, dtype=torch.float).to(device)
-        cum_rewards = torch.tensor(cum_rewards, dtype=torch.float).to(device)
+        actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
+        
+        # Get cumulative rewards (Return)
 
+        td_target = self.TD_target_1(rewards_list, gamma, reverse=False)              # Using just rewards
+        # td_target = self.TD_target_2(states, rewards_list, gamma)                   # Using Critic network
+        td_target = torch.tensor(td_target, dtype=torch.float).to(device)
+        
+
+        # Compute Values
         values = self.critic_model(states)
         values = values.squeeze(dim=1)
+
+        # Optimize value loss (Critic)
         vf_loss = F.mse_loss(
             values,
-            cum_rewards,
+            td_target,
             reduction="none")
         
+        self.opt_critic.zero_grad()
         vf_loss.sum().backward()
         self.opt_critic.step()
 
@@ -143,10 +198,9 @@ class drl_model:
         # Optimize policy loss (Actor)
         with torch.no_grad():
             values = self.critic_model(states)
-        self.opt_actor.zero_grad()
 
-        actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
-        advantages = cum_rewards - values
+        advantages = (td_target - values).detach()
+        # advantages = td_target - values
         
         logits = self.actor_model(states)
         logits = torch.squeeze(logits)
@@ -156,6 +210,7 @@ class drl_model:
         log_probs = -F.cross_entropy(logits, actions, reduction="none")
         pi_loss = -log_probs * advantages
         
+        self.opt_actor.zero_grad()
         pi_loss.sum().backward()
         self.opt_actor.step()
 
@@ -167,6 +222,8 @@ class drl_model:
         
         self.reward_records.append(total_iter_rewars) # by epoch
         self.global_steps_T += 1
+
+        self.TD_target_record = td_target
 
         # print(self.global_steps_T)
 
