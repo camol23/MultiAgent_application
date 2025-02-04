@@ -507,9 +507,21 @@ class Environment:
     def apply_actions_left_right(self, action):
         '''
             actions := np.shape(n, 1)
+                * n := Number of agents
         '''
         for i, agent in enumerate(self.agents_obj):    
             if action[i, 0] :
+                agent.move_right()                    
+            else:
+                agent.move_left()
+
+    def apply_one_action_left_right(self, action):
+        '''
+            action := Integer
+                * n := Number of agents
+        '''
+        for i, agent in enumerate(self.agents_obj):    
+            if action :
                 agent.move_right()                    
             else:
                 agent.move_left()
@@ -532,6 +544,8 @@ class Environment:
 
     def visuzalization(self):
         
+        print()
+        print("---------------------------- Rewards --------------------------------")
         print("Epoch ", self.global_iterations)
         print("Inner iteration ", self.steps)
         # print("rewards ",self.reward_ang_error_list[-1]," ", self.reward_distance_list[-1] )
@@ -541,5 +555,6 @@ class Environment:
         print("States ", self.state_distance[-1][-1], " ", self.state_dist_to_guideline[-1][-1])
 
         print("--------------------------------------------------------------------")
+        print()
 
 
