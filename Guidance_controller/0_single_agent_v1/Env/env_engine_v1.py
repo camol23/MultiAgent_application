@@ -196,7 +196,7 @@ class Env_map:
             Purposes:
                 1) Test conllision functions
 
-        '''        
+        '''      
 
         x_pos = self.width/2 - (obst_w/2)
         y_pos = self.height/2 - (obst_h/2)

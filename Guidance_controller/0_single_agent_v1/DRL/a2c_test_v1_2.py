@@ -239,12 +239,19 @@ class drl_model:
         action_probs = torch.squeeze(action_probs)
         
         # Prepare index to target the Probs                             
+        num_actions = actions_list.shape[0]
         actions = np.squeeze(actions_list)                          # Size(Batch + #Agents)
-        idx_rows = np.arange(len(actions))                               # [0, ... , Total_samples]
+
+        # Batch size = 1
+        if num_actions == 1 :
+            log_probs = torch.log(action_probs[actions])
+        else:
+            idx_rows = np.arange(len(actions))                               # [0, ... , Total_samples]
+            log_probs = torch.log(action_probs[idx_rows, actions])
+            print("idx_rows", idx_rows)
+
         print("actions", actions)
-        print("idx_rows", idx_rows)
-        print("action_probs", action_probs)
-        log_probs = torch.log(action_probs[idx_rows, actions])
+        print("action_probs", len(action_probs))    
         pi_loss = -log_probs * advantages
         
         self.opt_actor.zero_grad()

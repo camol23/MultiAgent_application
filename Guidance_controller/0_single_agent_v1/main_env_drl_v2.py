@@ -40,7 +40,7 @@ model = a2c_test_v1_2.drl_model()
 
 # Training Parameters
 num_iterations = 10000
-env.max_steps = 1
+env.max_steps = 10
 
 
 
