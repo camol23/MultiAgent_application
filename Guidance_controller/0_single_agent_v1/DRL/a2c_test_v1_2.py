@@ -9,17 +9,19 @@ import matplotlib.pyplot as plt
     * V_1.2 : It's made to apply some possible corrections
                 over V_1.0  
 
-    Action Space: 
-                    1) Move to the ritgh (5 degrees)
-                    2) Move to the left (5 degrees) 
+    * Main Style : Batch are formed by the steps samples
 
-    Observation Space:
-                    1) Heading Error (angle) 
-                    2) Distance to the goal 
+        Action Space: 
+                        1) Move to the ritgh (5 degrees)
+                        2) Move to the left (5 degrees) 
 
-    Reward Space:
-                    1) Inverse proportional to the Error
-                    2) Inverse proportional to the Distance
+        Observation Space:
+                        1) Heading Error (angle) 
+                        2) Distance to the goal 
+
+        Reward Space:
+                        1) Inverse proportional to the Error
+                        2) Inverse proportional to the Distance
 
 '''
 
