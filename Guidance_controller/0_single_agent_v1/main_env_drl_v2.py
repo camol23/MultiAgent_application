@@ -40,7 +40,7 @@ model = a2c_test_v1_2.drl_model()
 
 # Training Parameters
 num_iterations = 10000
-env.max_steps = 10
+env.max_steps = 5
 
 
 
@@ -87,7 +87,7 @@ for i in range(0, num_iterations):
     # print(rewards_steps)
     # print(actions_steps)
 
-    model.training_a2c(states_steps, actions_steps, rewards_steps, vis_flag=False)
+    model.training_a2c(states_steps, actions_steps, rewards_steps, vis_flag=True)
     
 
 

@@ -209,7 +209,7 @@ class drl_model:
         
         # Get cumulative rewards (Return)
         td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
-        # td_target = self.TD_target_2(states, rewards_list, gamma)                   # Using Critic network
+        # td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
 
@@ -221,10 +221,12 @@ class drl_model:
         vf_loss = F.mse_loss(
             values,
             td_target,
-            reduction="none")
+            reduction="none")                                               # In this case requires loss.sum() or loss.mean()
         
+        print("Loss Val.shape = ", vf_loss.shape)
         self.opt_critic.zero_grad()
-        vf_loss.sum().backward()
+        #vf_loss.sum().backward()
+        vf_loss.mean().backward()
         self.opt_critic.step()
 
 
@@ -240,7 +242,7 @@ class drl_model:
         
         # Prepare index to target the Probs                             
         num_actions = actions_list.shape[0]
-        actions = np.squeeze(actions_list)                          # Size(Batch + #Agents)
+        actions = np.squeeze(actions_list)                                  # Size(Batch + #Agents)
 
         # Batch size = 1
         if num_actions == 1 :
@@ -255,7 +257,8 @@ class drl_model:
         pi_loss = -log_probs * advantages
         
         self.opt_actor.zero_grad()
-        pi_loss.sum().backward()
+        # pi_loss.sum().backward()
+        pi_loss.mean().backward()
         self.opt_actor.step()
 
         # Output total rewards in episode (max 500)
