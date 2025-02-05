@@ -39,16 +39,16 @@ print("Start point = ", path[0, -2], path[1, -2])
 model = a2c_test_v1_2.drl_model()
 
 # Training Parameters
-num_iterations = 10000
-env.max_steps = 5
+num_iterations = 271
+env.max_steps = 50
 
 
 
 for i in range(0, num_iterations):
 
     # *It shoud be in a reset function*
-    states = np.zeros((1, 1, 2))
-    states_steps = np.zeros((1, 1, 2))
+    states = np.zeros((1, 2))
+    states_steps = np.zeros((1, 2))
     rewards = np.zeros((1, 1))
     rewards_steps = np.zeros((1, 1))
     # actions = np.zeros((1, 1))
@@ -64,8 +64,8 @@ for i in range(0, num_iterations):
         env.apply_one_action_left_right(actions)
         env.env_step(normalize_states=True, training=True)
 
-        states[0, 0, 0] = env.state_distance[-1][-1]
-        states[0, 0, 1] = env.state_dist_to_guideline[-1][-1]
+        states[0, 0] = env.state_distance[-1][-1]
+        states[0, 1] = env.state_dist_to_guideline[-1][-1]
 
         rewards[0, 0] = env.reward_total_list[-1]
         done = not(env.stop_steps)
@@ -97,5 +97,6 @@ for i in range(0, num_iterations):
         
 
 
-model.plot_results()
+# model.plot_rewards()
+model.plot_training()
 sys.exit()

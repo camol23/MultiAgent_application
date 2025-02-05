@@ -82,6 +82,9 @@ class drl_model:
         self.reward_records = []
         self.global_steps_T = 0
         self.TD_target_record = None
+        self.pi_loss_record = []
+        self.val_loss_record = []
+        self.advantage_record = []
 
 
 
@@ -162,8 +165,8 @@ class drl_model:
         '''
             Use Critic network to compute V( S_[t+1] )
         '''
-
-        values = self.critic_model(states).detach()
+        
+        values = self.critic_model(states).detach().numpy()
 
         # G = r_[t] + gamma * V(S_[t+1])
         td_target = np.zeros_like(rewards_list)
@@ -209,13 +212,13 @@ class drl_model:
         
         # Get cumulative rewards (Return)
         td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
-        # td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
+        #td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
 
         # Compute Values
         values = self.critic_model(states)
-        values = values.squeeze(dim=1)
+        # values = values.squeeze(dim=1)                                                # Require when I used states([batch, 1, 2])
 
         # Optimize value loss (Critic)
         vf_loss = F.mse_loss(
@@ -261,20 +264,27 @@ class drl_model:
         pi_loss.mean().backward()
         self.opt_actor.step()
 
-        # Output total rewards in episode (max 500)
-        # print("Run episode{} with rewards {}".format(i, sum(rewards_list)), end="\r")
-
-        total_iter_rewars = sum(rewards_list)
-        print("Run episode {} with rewards {}".format(self.global_steps_T, total_iter_rewars))
-        
-        self.reward_records.append(total_iter_rewars) # by epoch
-        self.global_steps_T += 1
-        self.TD_target_record = td_target
-
-        # print(self.global_steps_T)
 
         # stop if reward mean > 475.0
         # self.stop_condition()
+        
+        # Record Iterations
+        pi_loss_mean = torch.mean(pi_loss).detach().numpy()
+        val_loss_mean = torch.mean( torch.squeeze(vf_loss) ).detach().numpy()
+        
+
+        total_iter_rewars = sum(rewards_list)
+        self.reward_records.append(total_iter_rewars) # by epoch
+        self.TD_target_record = td_target
+        self.pi_loss_record.append( pi_loss_mean )
+        self.val_loss_record.append( val_loss_mean )
+
+        # Visualization
+        print()
+        print("Run episode {} with rewards {}".format(self.global_steps_T, total_iter_rewars))
+        print("     Pi Loss = {}  Val. Loss = {} ".format(pi_loss_mean, val_loss_mean))
+        print("___________________________________")
+        self.global_steps_T += 1
 
         if vis_flag :
             print("--------- Training Function ---------")
@@ -298,8 +308,40 @@ class drl_model:
         pass
 
 
-    def plot_results(self):
+    def plot_rewards(self):
         
         plt.plot(self.reward_records)
         plt.title("Sum. rewards by epoch - Epochs " + str(self.global_steps_T) )
         plt.show() 
+
+
+    def plot_training(self):
+        '''
+            Plot in a row:
+                (1) Reward
+                (2) Pi. Loss
+                (3) Val. Loss
+        '''
+        
+        # Create figure and subplots
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+        # First plot
+        axes[0].plot(self.reward_records, 'r')
+        axes[0].set_title("Sum. rewards by epoch - Epochs " + str(self.global_steps_T))
+
+        # Second plot
+        axes[1].plot(self.pi_loss_record, 'g')
+        axes[1].set_title("Pi. loss")
+
+        # Third plot
+        axes[2].plot(self.val_loss_record, 'b')
+        axes[2].set_title("Vsal. loss")
+
+        # Adjust layout
+        for ax in axes:
+            # ax.set_aspect('equal')
+            ax.grid(True)
+
+        plt.tight_layout()
+        plt.show()

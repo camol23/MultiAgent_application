@@ -1,5 +1,9 @@
+------------------------------
+    Commands
+------------------------------
 
-
+1) Run A2C V2 (Batch formed based on steps)
+    python /home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1/main_env_drl_v2.py
 
 
 ------------------------------
