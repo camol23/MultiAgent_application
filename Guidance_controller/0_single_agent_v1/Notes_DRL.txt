@@ -1,6 +1,6 @@
-------------------------------
+------------------------------------------------------------------------------------------
     Commands
-------------------------------
+------------------------------------------------------------------------------------------
 
 1) Run A2C V2 (Batch formed based on steps)
     python ./Guidance_controller/0_single_agent_v1/main_env_drl_v2.py
@@ -10,9 +10,9 @@
 
 
 
-------------------------------
+------------------------------------------------------------------------------------------
     Comments
-------------------------------
+------------------------------------------------------------------------------------------
 1) The custom A2C v2 and The standart have simuliar bad behaviour
     a) The plots suggest the problem is related to the rewards 
         *) Too high al the time
@@ -20,10 +20,23 @@
 
 
 
-------------------------------
+------------------------------------------------------------------------------------------
     To DOs
-------------------------------
+------------------------------------------------------------------------------------------
 
+4) Check How increase the simulation response
+    a) update time 
+    b) Not graphical visualization
+
+3) Included the Stop condition when the goal is reached (tolerance)
+
+2) Reward function to encorage move to the same direction to the goal  
+    a) It suppoues to be enough with the closer position reward fnct?
+
+1) Change the rewards 
+    a) Discrete
+    b) Combine them between discrete for far values and continuous for close ones 
+    c) Should be Consider penalties?
 
 
 

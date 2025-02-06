@@ -18,7 +18,8 @@ map_settings = {
     'num_obs': 3,
     'type_obs': None,                           # Random sqaure obstacles
     'seed_val_obs': 286,                        # Test obstacles location
-    'mouse_flag': True                          # Mouse pointer is turned in a sqaere obstacle
+    'mouse_flag': True,                          # Mouse pointer is turned in a sqaere obstacle
+    'max_rect_obs_size': 200                    # maximun Obstacle size
 }
 
 
@@ -36,7 +37,7 @@ print("Start point = ", path[0, -2], path[1, -2])
 while env.running_flag:
 
     env.env_step(normalize_states=True, training=True)
-    env.visuzalization()
+    # env.visuzalization()
     
 
     # Debuging States and Rewards functions
@@ -45,6 +46,8 @@ while env.running_flag:
 
     # env.compute_distance_to_goal()
     # env.compute_distance_reward()
+
+    
 
 
 sys.exit()

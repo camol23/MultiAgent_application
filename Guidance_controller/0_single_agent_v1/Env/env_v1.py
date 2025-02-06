@@ -70,6 +70,9 @@ class Environment:
         self.reward_total_list = []
         self.reward_dist_guideline_list = []
 
+        self.reward_distance_semiDiscrete_list = []
+        self.reward_dist_guideline__semiDiscrete_list = []
+
         # States
         self.state_theta = []                                    # angle between agent and guide line 
         self.state_distance = []                                 # current distance to the goal
@@ -118,8 +121,9 @@ class Environment:
         elif self.obstacles_type == 'center_box' :
             self.env_map.center_box(obst_w = 600, obst_h = 200)
         
+        # On obstacles in the map 
         else: 
-            self.env_map.random_obstacles(number=self.num_obstacles, seed_val=self.seed_rand_obs) 
+            self.env_map.random_obstacles(number=0, seed_val=self.seed_rand_obs) 
 
         # Reference path to be Draw (indicative)
         self.env_map.path_agent = np.copy(self.reference_path)
@@ -254,6 +258,11 @@ class Environment:
         self.compute_state_dist_guideline(normalize_states=normalize_states)
         self.compute_dist_guideline_reward(normalize_states=normalize_states)
 
+
+        # Semi-Discrete Rewards
+        self.compute_distance_reward_semiDiscrete(normalize_states=normalize_states)
+        self.compute_dist_guideline_semiDiscrete_reward(normalize_states=normalize_states)
+
         # Compute total reward (Sum all)
         self.compute_total_reward()
 
@@ -293,9 +302,11 @@ class Environment:
         w_dist_goal = 0.5
         w_dist_guideline = 0.5
 
+        self.reward_total_list.append( w_dist_guideline* self.reward_distance_semiDiscrete_list[-1][-1] +
+                                       w_dist_goal* self.reward_distance_semiDiscrete_list[-1][-1]             )
 
-        self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline_list[-1][-1] +
-                                       w_dist_goal* self.reward_distance_list[-1][-1]             )
+        # self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline_list[-1][-1] +
+        #                               w_dist_goal* self.reward_distance_list[-1][-1]             )
         
         # w_ang_error* self.reward_ang_error_list[-1]
 
@@ -322,6 +333,33 @@ class Environment:
         # self.reward_dist_guideline_list.append(reward)
         self.reward_dist_guideline_list.append(reward_list)
         print('dist. guide line reward = ', self.reward_dist_guideline_list[-1][-1])
+
+
+
+    def compute_dist_guideline_semiDiscrete_reward(self, normalize_states=False):
+
+        reward_list = []
+
+        for i in range(0, len(self.agents_obj)):
+            max_distance = self.agent_init_distance_list[i]/self.factor_norm_dist_guideline
+
+            if normalize_states:
+                current_dist = max_distance*self.state_dist_to_guideline[-1][i]
+            else:
+                current_dist = self.state_dist_to_guideline[-1][i]
+
+            reward = (max_distance-abs(current_dist))/(max_distance)
+
+            # Semi - Discrete Op.
+            if reward <= 0.7 :
+                reward = 0.0
+
+            reward_list.append(reward)
+                        
+        
+        # self.reward_dist_guideline_list.append(reward)
+        self.reward_dist_guideline__semiDiscrete_list.append(reward_list)
+        print('dist. guide line reward Semi-Discrete = ', self.reward_dist_guideline__semiDiscrete_list[-1][-1])
 
 
     def compute_angl_error_reward(self, normilize_states = False):
@@ -390,6 +428,30 @@ class Environment:
 
         self.reward_distance_list.append(reward_list)
         print('distance reward = ', self.reward_distance_list[-1][-1])
+
+
+    def compute_distance_reward_semiDiscrete(self, normalize_states=False):
+        reward_list = []
+
+        for i in range(0, len(self.agents_obj)):
+            max_distance = self.agent_init_distance_list[i]
+
+            if normalize_states:
+                # current_dist = max_distance*self.state_distance[i]
+                current_dist = max_distance*self.state_distance[-1][i]
+            else:
+                current_dist = self.state_distance[-1][i]
+
+            reward = (max_distance-current_dist)/(max_distance)
+
+            # Discrete 
+            if reward <= 0.5:
+                reward = 0.0
+
+            reward_list.append(reward)
+
+        self.reward_distance_semiDiscrete_list.append(reward_list)
+        print('distance reward semi-Discrete = ', self.reward_distance_semiDiscrete_list[-1][-1])
 
 
     def compute_state_dist_guideline(self, normalize_states=False):
@@ -549,7 +611,7 @@ class Environment:
         print("Epoch ", self.global_iterations)
         print("Inner iteration ", self.steps)
         # print("rewards ",self.reward_ang_error_list[-1]," ", self.reward_distance_list[-1] )
-        print("rewards ", self.reward_distance_list[-1][-1], " ", self.reward_dist_guideline_list[-1][-1] )
+        print("rewards ", self.reward_distance_list[-1][-1], " ", self.reward_dist_guideline_list[-1][-1], " ", self.reward_distance_semiDiscrete_list[-1][-1], " ", self.reward_dist_guideline__semiDiscrete_list[-1][-1] )
         print("reward ", self.reward_total_list[-1])
         # print("States ", self.state_theta[-1], " ", self.state_distance[-1][-1])
         print("States ", self.state_distance[-1][-1], " ", self.state_dist_to_guideline[-1][-1])

@@ -41,8 +41,8 @@ action_dim = 2
 model = a2c_standart_v1.ActorCritic_Agent(state_dim=state_dim, action_dim=action_dim)
 
 # Training Parameters
-num_iterations = 10
-env.max_steps = 19
+num_iterations = 2000
+env.max_steps = 10
 
 
 
