@@ -3,11 +3,33 @@
 ------------------------------
 
 1) Run A2C V2 (Batch formed based on steps)
-    python /home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1/main_env_drl_v2.py
+    python ./Guidance_controller/0_single_agent_v1/main_env_drl_v2.py
+
+2) Run A2C standart version 
+    python ./Guidance_controller/0_single_agent_v1/main_env_a2c_standart_v1.py
+
+
+
+------------------------------
+    Comments
+------------------------------
+1) The custom A2C v2 and The standart have simuliar bad behaviour
+    a) The plots suggest the problem is related to the rewards 
+        *) Too high al the time
+        *) The loss is zero very soon
+
 
 
 ------------------------------
     To DOs
 ------------------------------
 
+
+
+
+------------------------------
+    Done from To DOs
+------------------------------
+
 1) Include TD target with done flag (Standart Computation)
+    * Is included as TD_target_v2() 

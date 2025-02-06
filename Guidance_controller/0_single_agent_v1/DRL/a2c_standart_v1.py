@@ -108,10 +108,10 @@ class ActorCritic_Agent:
             action_prob (float): Probability of selected action
         """
 
-        state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
+        state = torch.FloatTensor(state).to(self.device)
         # state = torch.FloatTensor(state).to(self.device)
         probs, _ = self.network(state)
-        action_probs = probs.detach().cpu().numpy()[0]
+        action_probs = torch.squeeze(probs).detach().cpu().numpy()
         action = np.random.choice(len(action_probs), p=action_probs)
 
 
@@ -136,7 +136,7 @@ class ActorCritic_Agent:
         return action, action_probs[action]
     
 
-    def train_step(self, state, action, reward, next_state, done):
+    def train_step(self, state, action, reward, next_state, done, vis_flag=False):
         """
         Perform a single training step using Actor-Critic algorithm
         
@@ -149,16 +149,18 @@ class ActorCritic_Agent:
         """
 
         # Convert to tensors
-        state = torch.FloatTensor(state).unsqueeze(0).to(self.device)
-        next_state = torch.FloatTensor(next_state).unsqueeze(0).to(self.device)
+        state = torch.FloatTensor(state).to(self.device)
+        next_state = torch.FloatTensor(next_state).to(self.device)
         action = torch.LongTensor([action]).to(self.device)
         
         # Compute target value
         _, current_value = self.network(state)
         _, next_value = self.network(next_state)
-        
-        target_value = reward + self.gamma * next_value * (1 - done)
-        
+
+        #target_value = reward + self.gamma * next_value.detach().numpy() * (1 - done)
+        target_value = reward + self.gamma * next_value.detach().numpy() 
+        target_value = torch.tensor(target_value, dtype=torch.float).to(self.device)
+
         # Compute losses
         critic_loss = F.mse_loss(current_value, target_value.detach())
         
@@ -184,12 +186,12 @@ class ActorCritic_Agent:
         loss_item = loss.item()
         pi_loss_mean = torch.mean(actor_loss).detach().numpy()
         val_loss_mean = torch.mean( torch.squeeze(critic_loss) ).detach().numpy()
-        
+        td_target_mean = torch.mean(target_value).item()
 
-        total_iter_rewars = reward
-        self.cumulative_reward_record.append(self.umulative_reward_record[-1] + reward )
+        total_iter_rewars = np.sum(reward)
+        self.cumulative_reward_record.append(self.cumulative_reward_record[-1] + reward )
         self.reward_records.append(total_iter_rewars) 
-        self.TD_target_record.append(target_value)
+        self.TD_target_record.append(td_target_mean)
         self.pi_loss_record.append( pi_loss_mean )
         self.val_loss_record.append( val_loss_mean )
         self.loss_record.append( loss_item )
@@ -207,8 +209,43 @@ class ActorCritic_Agent:
             print("Input Actions Shape = ", action.shape)
             print("Input Rewards       = ", reward)
             print()
-            print("TD Target Shape    = ", target_value)
+            print("TD Target Shape    = ", td_target_mean)
             print("Actor Output Shape = ", action_probs.shape)
             print("Log( Probs ) Shape = ", log_probs.shape)
+            print("Pi loss shape (record) = ", len(self.pi_loss_record))
         
 
+    def plot_training(self):
+        '''
+            Plot in a row:
+                (1) Reward
+                (2) Pi. Loss
+                (3) Val. Loss
+        '''
+        
+        # Create figure and subplots
+        fig, axes = plt.subplots(1, 4, figsize=(12, 4))
+
+        # First plot
+        axes[0].plot(self.reward_records, 'r')
+        axes[0].set_title("Rewards by epoch - Epochs " + str(self.global_steps_T))
+
+        # Second plot
+        axes[1].plot(self.pi_loss_record, 'g')
+        axes[1].set_title("Pi. loss")
+
+        # Third plot
+        axes[2].plot(self.val_loss_record, 'b')
+        axes[2].set_title("Vsal. loss")
+
+        # 
+        axes[3].plot(self.TD_target_record, 'r')
+        axes[3].set_title("TD Target")
+
+        # Adjust layout
+        for ax in axes:
+            # ax.set_aspect('equal')
+            ax.grid(True)
+
+        plt.tight_layout()
+        plt.show()
