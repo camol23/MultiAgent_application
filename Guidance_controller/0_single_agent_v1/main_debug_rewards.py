@@ -1,7 +1,9 @@
 import sys
+import time
 import numpy as np
 
 from Env import env_v1
+from aux_libs import ploting
 
 
 # Agents Settings
@@ -34,6 +36,8 @@ print("Goal point = ", path[0, -1], path[1, -1])
 print("Start point = ", path[0, -2], path[1, -2])
 
 
+# plotter = ploting.MultiRealtimePlot(num_plots=3, max_points=50)
+
 while env.running_flag:
 
     env.env_step(normalize_states=True, training=True)
@@ -47,7 +51,39 @@ while env.running_flag:
     # env.compute_distance_to_goal()
     # env.compute_distance_reward()
 
+
+    # Real-Time plot  (It can be slow)
+    # value1 = env.state_distance[-1][-1]
+    # value2 = env.reward_distance_list[-1][-1]
+    # value3 = env.reward_dist_guideline__semiDiscrete_list[-1][-1]
+
+    # plotter.add_points([value1, value2, value3])
+
     
+    
+
+# Plot  
+print()
+plot_flag = input("Do you wanna Plot? y/n ... ")
+
+if plot_flag == 'y' :
+
+    list_1 = np.array(env.state_distance).squeeze()
+    list_2 = np.array(env.reward_distance_list).squeeze()
+    list_3 = np.array(env.reward_distance_semiDiscrete_list).squeeze()
+    titles = ['Dist. State', 'Lin. Reward', 'Semi-Discrete Reward']
+
+    ploting.plot_list(list_1, list_2, list_3, titles)
+
+
+    list_1 = np.array(env.state_dist_to_guideline).squeeze()
+    list_2 = np.array(env.reward_dist_guideline_list).squeeze()
+    list_3 = np.array(env.reward_dist_guideline__semiDiscrete_list).squeeze()
+    titles = ['Dist. guide-line State', 'Lin. Reward', 'Semi-Discrete Reward']
+
+    ploting.plot_list(list_1, list_2, list_3, titles)
+
+
 
 
 sys.exit()

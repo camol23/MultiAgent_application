@@ -253,15 +253,14 @@ class Environment:
         # Compute angle between agent and guide line to the goal 
         self.compute_state_distance_to_goal(normalize_states=normalize_states)
         self.compute_distance_reward(normalize_states=normalize_states)
+        self.compute_distance_reward_semiDiscrete(normalize_states=normalize_states)
+        print()
 
         # State agent distance to the guide line
         self.compute_state_dist_guideline(normalize_states=normalize_states)
         self.compute_dist_guideline_reward(normalize_states=normalize_states)
-
-
-        # Semi-Discrete Rewards
-        self.compute_distance_reward_semiDiscrete(normalize_states=normalize_states)
-        self.compute_dist_guideline_semiDiscrete_reward(normalize_states=normalize_states)
+        self.compute_dist_guideline_semiDiscrete_reward(normalize_states=normalize_states)       
+        
 
         # Compute total reward (Sum all)
         self.compute_total_reward()
@@ -471,6 +470,7 @@ class Environment:
         for i, _ in enumerate(self.agents_obj):
             theta = theta_list[i]
 
+            # Just to identify the side respect to the guide-line
             if theta < 0 :
                 sign = -1
             else:

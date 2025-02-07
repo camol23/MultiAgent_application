@@ -166,3 +166,38 @@ class MultiRealtimePlot:
     
 #     plt.ioff()
 #     plt.show()
+
+
+def plot_list(list_1, list_2, list_3, titles):
+        '''
+            Plot in a row
+
+                Args: 
+                    (1) Lists
+                    (2) titles := List of Strings 
+                
+        '''
+        
+        # Create figure and subplots
+        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+
+        # First plot
+        axes[0].plot(list_1, 'r')
+        axes[0].set_title(titles[0])
+
+        # Second plot
+        axes[1].plot(list_2, 'g')
+        axes[1].set_title(titles[1])
+
+        # Third plot
+        axes[2].plot(list_3, 'b')
+        axes[2].set_title(titles[2])
+
+
+        # Adjust layout
+        for ax in axes:
+            # ax.set_aspect('equal')
+            ax.grid(True)
+
+        plt.tight_layout()
+        plt.show()
