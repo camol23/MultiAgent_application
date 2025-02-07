@@ -507,13 +507,36 @@ class Environment:
         for agent in self.agents_obj:
             # Cosine Law
             a = agents_v1.distance( goal_point, (agent.x, agent.y) )
-            b = agents_v1.distance( goal_point, (agent.start_pos[0], agent.start_pos[1]) )
-            c = agents_v1.distance( (agent.x, agent.y), (agent.start_pos[0], agent.start_pos[1]) )
+            
+            # 2-Second computation 
+            if a == 0 :
+                # privious state to determine the orientation
+                # correction based on different triangle definition (agent displacement)
+                agent_x = agent.previous_state["x"]
+                agent_y = agent.previous_state["y"]
+                a = agents_v1.distance( goal_point, (agent_x, agent_y) )
+            
+            else:
+                agent_x = agent.x
+                agent_y = agent.y
 
-            # print("denominator angle ", (a**2 + b**2 - c**2), " / ", 2*a*b)
-            relation = (a**2 + b**2 - c**2)/(2*a*b)
-            if (abs(relation) < 1.1 ) & (abs(relation) > 0.99 ):
-                relation = 0.99*(relation/abs(relation))
+
+            b = agents_v1.distance( goal_point, (agent.start_pos[0], agent.start_pos[1]) )
+            c = agents_v1.distance( (agent_x, agent_y), (agent.start_pos[0], agent.start_pos[1]) )
+
+            # print("denominator angle ", (a**2 + b**2 - c**2), " / ", 2*a*b)            
+            # Main computation
+            if c == 0:
+                relation = 1 # -> theta = 0
+            else:
+                relation = (a**2 + b**2 - c**2)/(2*a*b)
+            
+            # 1-Computation Partially wrong
+            # if (abs(relation) < 1.1 ) & (abs(relation) > 0.99 ):
+            #     relation = 0.99*(relation/abs(relation))
+            
+
+            # Angle calculation
             theta = math.acos( relation )
 
             # define side (- := up side in the window)
