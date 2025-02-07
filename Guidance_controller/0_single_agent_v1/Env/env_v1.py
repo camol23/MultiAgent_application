@@ -301,7 +301,7 @@ class Environment:
         w_dist_goal = 0.5
         w_dist_guideline = 0.5
 
-        self.reward_total_list.append( w_dist_guideline* self.reward_distance_semiDiscrete_list[-1][-1] +
+        self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline__semiDiscrete_list[-1][-1] +
                                        w_dist_goal* self.reward_distance_semiDiscrete_list[-1][-1]             )
 
         # self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline_list[-1][-1] +
@@ -350,8 +350,8 @@ class Environment:
             reward = (max_distance-abs(current_dist))/(max_distance)
 
             # Semi - Discrete Op.
-            if reward <= 0.7 :
-                reward = 0.0
+            if reward <= 0.9 :
+                reward = reward*0.1
 
             reward_list.append(reward)
                         
@@ -445,7 +445,7 @@ class Environment:
 
             # Discrete 
             if reward <= 0.5:
-                reward = 0.0
+                reward = reward*0.8
 
             reward_list.append(reward)
 

@@ -9,6 +9,10 @@
     python ./Guidance_controller/0_single_agent_v1/main_env_a2c_standart_v1.py
 
 
+3) Test Rewards and States computation
+     python ./Guidance_controller/0_single_agent_v1/main_debug_rewards.py
+
+
 
 ------------------------------------------------------------------------------------------
     Comments

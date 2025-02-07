@@ -213,8 +213,8 @@ class drl_model:
         # actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
         
         # Get cumulative rewards (Return)
-        td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
-        #td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
+        #td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
+        td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
 
