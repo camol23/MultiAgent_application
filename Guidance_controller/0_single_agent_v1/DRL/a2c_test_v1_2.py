@@ -75,7 +75,8 @@ class drl_model:
         self.actor_model = ActorNet().to(device)
         self.critic_model = ValueNet().to(device)
 
-        self.load_optimizers()
+        self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.001)
+        self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
 
         # general
         self.stop_condition_flag = 0
@@ -139,9 +140,9 @@ class drl_model:
 
 
     #### Training 
-    def load_optimizers(self):
-        self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.001)
-        self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
+    def load_optimizers(self, opt_actor, opt_critic):
+        self.opt_critic = opt_critic
+        self.opt_actor = opt_actor
 
 
     def TD_target_1(self, rewards_list, gamma, reverse_flag=False):
