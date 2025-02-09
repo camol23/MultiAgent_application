@@ -199,6 +199,7 @@ class Environment:
 
         # Agent stop
         self.stop_steps = False  
+
         ### It could be uncomment (last time)
         # self.env_map.last_time = 0                                # it makes reset dt in env_map.compute_dt() to avoid big space jumps caused by long radients computation
 
@@ -282,17 +283,21 @@ class Environment:
             self.stop_steps = True
 
         # Stopped by reach the goal
-        _, agent.wp_current, goal_reached = agents_v1.follow_path_wp(agent, self.reference_path, get_angl_flag=False)
+        _, agent.wp_current, goal_reached = agents_v1.follow_path_wp(agent, self.reference_path, get_angl_flag=False, tolerance= 0.015)
         if goal_reached :
             self.stop_steps = True
-            self.goal_reached_flag = True
+            self.goal_reached_flag = True       # To add extra reward
+            agent.collition_flag = True         # To return to init position
         else:
-            self.goal_reached_flag = False
+            self.goal_reached_flag = False  
 
         # print("Is alive ", self.stop_steps)
 
         if self.steps >= self.max_steps :
             self.stop_steps = True
+
+            agent.collition_flag = True         # To return to init position (just training)
+
 
 
     def compute_total_reward(self):
@@ -619,11 +624,14 @@ class Environment:
                 * n := Number of agents
         '''
         for i, agent in enumerate(self.agents_obj):    
-            if action :
+            if action == 0 :
                 agent.move_right()                    
-            else:
+
+            elif action == 1 :
                 agent.move_left()
 
+            elif action == 2 :
+                pass
 
 
     def get_diagonal_size(self):

@@ -11,7 +11,7 @@ from aux_libs import store_model
 
 # ----- Execution Type -----
 
-testing_exe = False     # Load a Model and disable Traning 
+testing_exe = True     # Load a Model and disable Traning 
 #training_exe = True
 #store_flag = False
 
@@ -41,7 +41,8 @@ map_settings = {
 env = env_v1.Environment(map_settings, agents_settings, training_flag=True)
 env.initialize()
 
-goal_pos = (700, 300) #(1000, 200)
+# goal_pos = (700, 300) #(1000, 200)
+goal_pos = (220, 480)
 path = np.transpose(np.array([agents_settings['start_pos'], goal_pos]))
 env.load_path(path)
 print("Goal point = ", path[0, -1], path[1, -1])
@@ -79,8 +80,8 @@ if testing_exe :
 
 
 # Training Parameters
-num_iterations = 271
-env.max_steps = 10
+num_iterations = 80
+env.max_steps = 600
 
 
 

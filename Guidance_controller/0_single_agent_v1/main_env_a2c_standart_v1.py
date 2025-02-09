@@ -50,19 +50,26 @@ print("Start point = ", path[0, -2], path[1, -2])
 
 
 # DRL model
-state_dim = 2
-action_dim = 2
+state_dim = 2       # [Dist. to goal, Dist. to guidline]
+action_dim = 3      # [rigth, left, nothing]
 model = a2c_standart_v1.ActorCritic_Agent(state_dim=state_dim, action_dim=action_dim)
 
 # Training Parameters
-num_iterations = 10
-env.max_steps = 500
+num_iterations = 20
+env.max_steps = 800
+
+# When apply backpro
+# num_iter_to_train = int(env.max_steps/2)
+num_iter_to_train = 10
+
 
 for i in range(0, num_iterations):
 
     # *It shoud be in a reset function*
     states = np.zeros((1, 2))
+    states_steps = np.zeros((1, 2))
     next_state = np.zeros((1, 2))
+    next_state_steps = np.zeros((1, 2))
     rewards = np.zeros((1, 1))
     rewards_steps = np.zeros((1, 1))
     # actions = np.zeros((1, 1))
@@ -75,6 +82,7 @@ for i in range(0, num_iterations):
 
     done = False
     env.global_iterations = i
+    counter_to_train = 0
 
     while not done :
         
@@ -91,7 +99,33 @@ for i in range(0, num_iterations):
         done = env.stop_steps
         env.visuzalization()
 
-        model.train_step(states, actions, rewards, next_state, done, vis_flag=False)
+        # Store batch
+        states_steps = np.vstack( (states_steps, states) )
+        next_state_steps = np.vstack( (next_state_steps, next_state) )
+        rewards_steps = np.vstack( (rewards_steps, rewards) )
+        actions_steps = np.vstack( (actions_steps, actions) )
+
+
+        if (counter_to_train >= num_iter_to_train) or (done) :
+            
+            # Remove the first row (init. array with zeros)
+            states_steps = np.delete( states_steps, 0, axis=0)
+            next_state_steps = np.delete( next_state_steps, 0, axis=0)
+            rewards_steps = np.delete( rewards_steps, 0, axis=0)
+            actions_steps = np.delete( actions_steps, 0, axis=0)
+
+            # model.train_step(states, actions, rewards, next_state, done, vis_flag=False)
+            model.train_batch(states_steps, actions_steps, rewards_steps, next_state_steps, done, vis_flag=False)
+            counter_to_train = 0
+
+            # Reset Batch
+            # *It shoud be in a reset function*
+            states_steps = np.zeros((1, 2))
+            next_state_steps = np.zeros((1, 2))
+            rewards_steps = np.zeros((1, 1))            
+            actions_steps = np.zeros((1, 1))
+        else:
+            counter_to_train = counter_to_train + 1             
 
         # Update
         states = next_state

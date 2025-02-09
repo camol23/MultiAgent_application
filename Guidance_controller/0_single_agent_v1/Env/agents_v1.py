@@ -178,12 +178,14 @@ def follow_path_wp(robot, path_wp, get_angl_flag=True, tolerance=0.02):
         
 
     tol = tolerance
-    if ((x_wp*(1-tol), y_wp*(1-tol)) <= (x_robot, y_robot)) & ((x_robot, y_robot) <= (x_wp*(1+tol), y_wp*(1+tol))):
-        idx_wp = idx_wp+1   
+    # if ((x_wp*(1-tol), y_wp*(1-tol)) <= (x_robot, y_robot)) & ((x_robot, y_robot) <= (x_wp*(1+tol), y_wp*(1+tol))):
+    if ( x_wp*(1-tol) <= x_robot ) and ( x_robot <= x_wp*(1+tol) ):
+        if ( y_wp*(1-tol) <= y_robot ) and (  y_robot <=  y_wp*(1+tol) ) :
+            idx_wp = idx_wp+1   
 
-        if idx_wp == (path_wp.shape[1]):
-            stop_signal = 1
-            idx_wp -= 1
+            if idx_wp == (path_wp.shape[1]):
+                stop_signal = 1
+                idx_wp -= 1
 
         # x_wp = path_wp[0,idx_wp]
         # y_wp = path_wp[1,idx_wp]
