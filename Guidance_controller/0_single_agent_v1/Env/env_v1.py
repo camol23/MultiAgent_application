@@ -73,6 +73,8 @@ class Environment:
         self.reward_distance_semiDiscrete_list = []
         self.reward_dist_guideline__semiDiscrete_list = []
 
+        self.goal_reached_flag = False                           # Signal Actived in the goal surroundings to assign an Extra reward 
+
         # States
         self.state_theta = []                                    # angle between agent and guide line 
         self.state_distance = []                                 # current distance to the goal
@@ -225,6 +227,7 @@ class Environment:
 
             if training:
                 self.get_output_step(normalize_states)  #*Should be move inside of the for loop 
+            
             self.env_map.display_update()
             self.steps = self.steps + 1
 
@@ -282,6 +285,9 @@ class Environment:
         _, agent.wp_current, goal_reached = agents_v1.follow_path_wp(agent, self.reference_path, get_angl_flag=False)
         if goal_reached :
             self.stop_steps = True
+            self.goal_reached_flag = True
+        else:
+            self.goal_reached_flag = False
 
         # print("Is alive ", self.stop_steps)
 
@@ -301,9 +307,16 @@ class Environment:
         w_dist_goal = 0.5
         w_dist_guideline = 0.5
 
-        self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline__semiDiscrete_list[-1][-1] +
-                                       w_dist_goal* self.reward_distance_semiDiscrete_list[-1][-1]             )
+        # Extra reward for reach the Goal
+        goal_reward = 0.0
+        if self.goal_reached_flag :
+            goal_reward = 5.0
 
+        self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline__semiDiscrete_list[-1][-1] +
+                                       w_dist_goal* self.reward_distance_semiDiscrete_list[-1][-1]     +
+                                        goal_reward        )
+
+        # PAST DEFINITIONS
         # self.reward_total_list.append( w_dist_guideline* self.reward_dist_guideline_list[-1][-1] +
         #                               w_dist_goal* self.reward_distance_list[-1][-1]             )
         

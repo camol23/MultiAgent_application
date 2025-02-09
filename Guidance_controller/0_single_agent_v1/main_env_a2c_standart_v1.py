@@ -1,8 +1,21 @@
 import sys
+import os
 import numpy as np
 
 from Env import env_v1
 from DRL import a2c_standart_v1
+from aux_libs import store_model
+
+
+# ----- Execution Type -----
+
+testing_exe = False     # Load a Model and disable Traning 
+#training_exe = True
+#store_flag = False
+
+# --------------------------
+
+
 
 
 # Agents Settings
@@ -28,7 +41,8 @@ map_settings = {
 env = env_v1.Environment(map_settings, agents_settings, training_flag=True)
 env.initialize()
 
-goal_pos = (700, 300) #(1000, 200)
+# goal_pos = (700, 300) #(1000, 200)
+goal_pos = (220, 480)
 path = np.transpose(np.array([agents_settings['start_pos'], goal_pos]))
 env.load_path(path)
 print("Goal point = ", path[0, -1], path[1, -1])
@@ -41,10 +55,8 @@ action_dim = 2
 model = a2c_standart_v1.ActorCritic_Agent(state_dim=state_dim, action_dim=action_dim)
 
 # Training Parameters
-num_iterations = 1000
-env.max_steps = 5
-
-
+num_iterations = 10
+env.max_steps = 500
 
 for i in range(0, num_iterations):
 
@@ -73,12 +85,13 @@ for i in range(0, num_iterations):
         next_state[0, 0] = env.state_distance[-1][-1]
         next_state[0, 1] = env.state_dist_to_guideline[-1][-1]
 
-        rewards[0, 0] = env.reward_total_list[-1]
+        # rewards[0, 0] = env.reward_total_list[-1]
+        rewards[0, 0] = rewards[0, 0] + env.reward_total_list[-1]
         
         done = env.stop_steps
         env.visuzalization()
 
-        model.train_step(states, actions, rewards, next_state, done, vis_flag=True)
+        model.train_step(states, actions, rewards, next_state, done, vis_flag=False)
 
         # Update
         states = next_state
@@ -93,5 +106,23 @@ for i in range(0, num_iterations):
 
 
 # model.plot_rewards()
-model.plot_training()
+model.plot_training(episodes=num_iterations)
+
+
+print()
+if (not testing_exe) :
+    store_flag = input("Do you wanna Store the Model? y/n ... ")
+
+if (store_flag == 'y') :
+
+    # Count all files in a directory
+    folder_path = './Guidance_controller/0_single_agent_v1/DRL/storage/checkpoints/model_standart'    
+    checkpoint_files = [name for name in os.listdir(folder_path) ]
+    num_files = len(checkpoint_files)
+    num_name = num_files + 1 
+    
+    store_model.save_model(model.network, model.optimizer, num_name, rewards_steps, folder_path)
+
+
+
 sys.exit()

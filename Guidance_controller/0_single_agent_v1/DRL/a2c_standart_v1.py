@@ -157,8 +157,8 @@ class ActorCritic_Agent:
         _, current_value = self.network(state)
         _, next_value = self.network(next_state)
 
-        #target_value = reward + self.gamma * next_value.detach().numpy() * (1 - done)
-        target_value = reward + self.gamma * next_value.detach().numpy() 
+        target_value = reward + self.gamma * next_value.detach().numpy() * (1 - done)
+        # target_value = reward + self.gamma * next_value.detach().numpy() 
         target_value = torch.tensor(target_value, dtype=torch.float).to(self.device)
 
         # Compute losses
@@ -187,14 +187,19 @@ class ActorCritic_Agent:
         pi_loss_mean = torch.mean(actor_loss).detach().numpy()
         val_loss_mean = torch.mean( torch.squeeze(critic_loss) ).detach().numpy()
         td_target_mean = torch.mean(target_value).item()
+        advantage_mean = torch.mean(advantage).item()
 
         total_iter_rewars = np.sum(reward)
-        self.cumulative_reward_record.append(self.cumulative_reward_record[-1] + reward )
         self.reward_records.append(total_iter_rewars) 
         self.TD_target_record.append(td_target_mean)
         self.pi_loss_record.append( pi_loss_mean )
         self.val_loss_record.append( val_loss_mean )
         self.loss_record.append( loss_item )
+        self.advantage_record.append( advantage_mean )
+
+        # self.cumulative_reward_record.append(self.cumulative_reward_record[-1] + reward )
+        if done :
+            self.cumulative_reward_record.append( total_iter_rewars )
 
         # Visualization
         print()
@@ -213,9 +218,52 @@ class ActorCritic_Agent:
             print("Actor Output Shape = ", action_probs.shape)
             print("Log( Probs ) Shape = ", log_probs.shape)
             print("Pi loss shape (record) = ", len(self.pi_loss_record))
-        
 
-    def plot_training(self):
+
+    def plot_training(self, episodes):
+        '''
+            Plot in a row:
+                (1) Reward
+                (2) Pi. Loss
+                (3) Val. Loss
+        '''
+        
+        # Create figure and subplots
+        fig, axes = plt.subplots(2, 3, figsize=(12, 4))
+
+        # First plot
+        axes[0, 0].plot(self.cumulative_reward_record, 'r')
+        axes[0, 0].set_title("Rewards by Episode " + str(episodes))
+
+        axes[1, 0].plot(self.reward_records, 'r')
+        axes[1, 0].set_title("Rewards by Steps " + str(self.global_steps_T))
+
+        # Second plot
+        axes[0, 1].plot(self.pi_loss_record, 'g')
+        axes[0, 1].set_title("Pi. loss")
+
+        # Third plot
+        axes[0, 2].plot(self.val_loss_record, 'b')
+        axes[0, 2].set_title("Vsal. loss")
+
+         
+        axes[1, 1].plot(self.TD_target_record, 'b')
+        axes[1, 1].set_title("TD Target")
+
+        axes[1, 2].plot(self.advantage_record, 'g')
+        axes[1, 2].set_title("Advange")
+
+        # Adjust layout
+        for axe in axes:
+            for ax in axe :
+                # ax.set_aspect('equal')
+                ax.grid(True)
+
+        plt.tight_layout()
+        plt.show()
+
+
+    def plot_training_oneRow(self):
         '''
             Plot in a row:
                 (1) Reward
@@ -228,7 +276,7 @@ class ActorCritic_Agent:
 
         # First plot
         axes[0].plot(self.reward_records, 'r')
-        axes[0].set_title("Rewards by epoch - Epochs " + str(self.global_steps_T))
+        axes[0].set_title("Rewards by step " + str(self.global_steps_T))
 
         # Second plot
         axes[1].plot(self.pi_loss_record, 'g')

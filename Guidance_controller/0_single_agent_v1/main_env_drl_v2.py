@@ -11,9 +11,9 @@ from aux_libs import store_model
 
 # ----- Execution Type -----
 
-testing_exe = True     # Load a Model and disable Traning 
-training_exe = True
-store_flag = False
+testing_exe = False     # Load a Model and disable Traning 
+#training_exe = True
+#store_flag = False
 
 # --------------------------
 
@@ -64,6 +64,9 @@ if testing_exe :
     actor_path = folder_path + '/actor_v1_2/checkpoint_episode_' + str(num_files) + '.pt'
     critic_path = folder_path +  '/critic_v1_2/checkpoint_episode_' + str(num_files) + '.pt'
 
+    print()
+    print("Model Loaded = ", actor_path)
+    print()
     # folder_path = './Guidance_controller/0_single_agent_v1/DRL/storage/models'
     # actor_path = folder_path + '/actor_v1_2_test.pt'
     # critic_path = folder_path +  '/critic_v1_2_test.pt'
@@ -76,8 +79,8 @@ if testing_exe :
 
 
 # Training Parameters
-num_iterations = 1
-env.max_steps = 0
+num_iterations = 271
+env.max_steps = 10
 
 
 
@@ -141,16 +144,18 @@ model.plot_training()
 
 
 print()
-store_flag = input("Do you wanna Store the Model? y/n ... ")
+if (not testing_exe) :
+    store_flag = input("Do you wanna Store the Model? y/n ... ")
 
-if store_flag == 'y' :
+if (store_flag == 'y') :
 
     # Count all files in a directory
-    folder_path = './Guidance_controller/0_single_agent_v1/DRL/storage/checkpoints'    
+    folder_path = './Guidance_controller/0_single_agent_v1/DRL/storage/checkpoints/actor_v1_2'    
     checkpoint_files = [name for name in os.listdir(folder_path) ]
     num_files = len(checkpoint_files)
     num_name = num_files + 1 
 
+    folder_path = './Guidance_controller/0_single_agent_v1/DRL/storage/checkpoints'
     actor_path = folder_path + '/actor_v1_2'
     critic_path = folder_path +  '/critic_v1_2'
     

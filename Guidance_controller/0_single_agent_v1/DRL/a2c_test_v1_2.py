@@ -36,7 +36,9 @@ class ActorNet(nn.Module):
 
         self.hidden = nn.Linear(2, hidden_dim)
         self.hidden_2 = nn.Linear(hidden_dim, hidden_dim)
+        self.hidden_3 = nn.Linear(hidden_dim, hidden_dim)
         self.output = nn.Linear(hidden_dim, 2)
+
         self.soft_layer = nn.Softmax(dim=-1)
 
     def forward(self, s):
@@ -44,6 +46,9 @@ class ActorNet(nn.Module):
         outs = F.relu(outs)
         outs = self.hidden_2(outs)
         outs = F.relu(outs)
+        outs = self.hidden_3(outs)
+        outs = F.relu(outs)
+
         logits = self.output(outs)
         probs = self.soft_layer(logits)
 
@@ -57,12 +62,15 @@ class ValueNet(nn.Module):
 
         self.hidden = nn.Linear(2, hidden_dim)
         self.hidden_2 = nn.Linear(hidden_dim, hidden_dim)
+        self.hidden_3 = nn.Linear(hidden_dim, hidden_dim)
         self.output = nn.Linear(hidden_dim, 1)
 
     def forward(self, s):
         outs = self.hidden(s)
         outs = F.relu(outs)
         outs = self.hidden_2(outs)
+        outs = F.relu(outs)
+        outs = self.hidden_3(outs)
         outs = F.relu(outs)
         value = self.output(outs)
         return value
@@ -214,8 +222,8 @@ class drl_model:
         # actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
         
         # Get cumulative rewards (Return)
-        #td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
-        td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
+        td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
+        #td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
 
