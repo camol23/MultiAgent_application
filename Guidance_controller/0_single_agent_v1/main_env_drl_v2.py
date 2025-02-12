@@ -5,13 +5,14 @@ import numpy as np
 from Env import env_v1
 from DRL import a2c_test_v1_2
 from aux_libs import store_model
+from DRL.networks import networks_a2c_v1_2
 
-
+# sys.path.insert(0, '/home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1')
 
 
 # ----- Execution Type -----
 
-testing_exe = True     # Load a Model and disable Traning 
+testing_exe = False     # Load a Model and disable Traning 
 #training_exe = True
 #store_flag = False
 
@@ -51,6 +52,12 @@ print("Start point = ", path[0, -2], path[1, -2])
 
 # DRL model
 model = a2c_test_v1_2.drl_model()
+
+state_dim = 2
+action_dim = 3
+actor_1 = networks_a2c_v1_2.ActorNetwork_1(state_dim, action_dim)
+critic_1 = networks_a2c_v1_2.CriticNetwork_1(state_dim)
+model.load_newModel(actor_1, critic_1)
 
 
 # load model
@@ -140,7 +147,7 @@ for i in range(0, num_iterations):
 
 
 # model.plot_rewards()
-model.plot_training()
+model.plot_training(episodes=num_iterations, steps=env.max_steps)
 
 
 
@@ -162,6 +169,8 @@ if (store_flag == 'y') :
     
     store_model.save_model(model.actor_model, model.opt_actor, num_name, rewards_steps, actor_path)
     store_model.save_model(model.critic_model, model.opt_critic, num_name, rewards_steps, critic_path)
+    
+    print("Saved as = ", actor_path + "_" + str(num_name) )
 
 
 sys.exit()

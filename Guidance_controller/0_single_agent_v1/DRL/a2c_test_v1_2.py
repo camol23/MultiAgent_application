@@ -6,6 +6,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 '''
+    Training Algorithm follows the fundamental 
+    Asynchronous Advantage Actor-Critic from : 
+            *) Asynchronous Methods for Deep Reinforcement Learning:
+               https://arxiv.org/pdf/1602.01783
+
     * V_1.2 : It's made to apply some possible corrections
                 over V_1.0  
 
@@ -76,7 +81,6 @@ class ValueNet(nn.Module):
         return value
 
 
-
 class drl_model:
     def __init__(self):
 
@@ -98,6 +102,15 @@ class drl_model:
         self.advantage_record = []
 
 
+    def load_newModel(self, actor, critic):
+        self.actor_model = actor.to(device)
+        self.critic_model = critic.to(device)
+
+        self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.001)
+        self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
+
+        print("Model Updated ...")
+    
 
     def pick_sample(self, s_batch, vis_flag = False, vis_vals=False):
         '''
@@ -107,13 +120,14 @@ class drl_model:
                 2) Method:            np.random.choice
 
         '''
+        self.actor_model.eval()  # This changes how BatchNorm layers behave
         with torch.no_grad():
 
             # s_batch = np.expand_dims(s, axis=0)
-            s_batch = torch.tensor(s_batch, dtype=torch.float).to(device)           #   --> size : (1, 4)
+            s_batch = torch.tensor(s_batch, dtype=torch.float).to(device)           #   --> size : (1, 2)
             
             # Apply Policy - Get Probs for the action Space
-            probs = self.actor_model(s_batch)                                #   --> size : (1, 2)
+            probs = self.actor_model(s_batch)                                #   --> size : (1, 2/3)
             
             #   --> size : (2)
             action_probs = probs.squeeze()            
@@ -166,8 +180,13 @@ class drl_model:
         for j in reversed(range(reward_len)):
             cum_rewards[j] = rewards_list[j] + (cum_rewards[j+1]*gamma if j+1 < reward_len else 0)
 
-        if reverse_flag :
-            cum_rewards = np.flip(cum_rewards)
+        # Not necessary (Just for test)
+        if reverse_flag :   
+            cum_rewards = np.flip(cum_rewards) 
+
+
+        # Looks like an improvement
+        cum_rewards = (cum_rewards - cum_rewards.mean()) / (cum_rewards.std() + 1e-8)
 
         return cum_rewards
     
@@ -216,18 +235,20 @@ class drl_model:
             Note:
                 1) One Iteration
         '''
+        self.actor_model.train()
 
         gamma = 0.99                                                                 # Discount factor
         states = torch.tensor(states_list, dtype=torch.float).to(device)
         # actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
         
-        # Get cumulative rewards (Return)
+        # Get cumulative rewards (Return G) in a List
         td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
         #td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
 
         # Compute Values
+        self.critic_model.train()                   # necessary?
         values = self.critic_model(states)
         # values = values.squeeze(dim=1)                                                # Require when I used states([batch, 1, 2])
 
@@ -251,6 +272,7 @@ class drl_model:
         advantages = (td_target - values).detach()
         # advantages = td_target - values
         
+        self.actor_model.train()                   # necessary?
         action_probs = self.actor_model(states)
         action_probs = torch.squeeze(action_probs)
         
@@ -282,6 +304,7 @@ class drl_model:
         # Record Iterations
         pi_loss_mean = torch.mean(pi_loss).detach().numpy()
         val_loss_mean = torch.mean( torch.squeeze(vf_loss) ).detach().numpy()
+        advantage_mean = torch.mean(advantages).item()
         
 
         total_iter_rewars = sum(rewards_list)
@@ -289,6 +312,7 @@ class drl_model:
         self.TD_target_record = td_target
         self.pi_loss_record.append( pi_loss_mean )
         self.val_loss_record.append( val_loss_mean )
+        self.advantage_record.append( advantage_mean )
 
         # Visualization
         print()
@@ -326,7 +350,7 @@ class drl_model:
         plt.show() 
 
 
-    def plot_training(self):
+    def plot_training(self, episodes = "", steps = ""):
         '''
             Plot in a row:
                 (1) Reward
@@ -335,24 +359,29 @@ class drl_model:
         '''
         
         # Create figure and subplots
-        fig, axes = plt.subplots(1, 3, figsize=(12, 4))
+        fig, axes = plt.subplots(2, 3, figsize=(12, 4))
 
         # First plot
-        axes[0].plot(self.reward_records, 'r')
-        axes[0].set_title("Sum. rewards by epoch - Epochs " + str(self.global_steps_T))
+        axes[0, 0].plot(self.reward_records, 'r')
+        # axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(self.global_steps_T) + " - " + str(steps) )
+        axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(episodes) + " - " + str(steps) )
 
         # Second plot
-        axes[1].plot(self.pi_loss_record, 'g')
-        axes[1].set_title("Pi. loss")
+        axes[0, 1].plot(self.pi_loss_record, 'g')
+        axes[0, 1].set_title("Pi. loss")
 
         # Third plot
-        axes[2].plot(self.val_loss_record, 'b')
-        axes[2].set_title("Vsal. loss")
+        axes[0, 2].plot(self.val_loss_record, 'b')
+        axes[0, 2].set_title("Vsal. loss")
+
+        axes[1, 0].plot(self.advantage_record, 'b')
+        axes[1, 0].set_title("Advanage mean")
 
         # Adjust layout
-        for ax in axes:
-            # ax.set_aspect('equal')
-            ax.grid(True)
+        for axe in axes:
+            for ax in axe :
+                # ax.set_aspect('equal')
+                ax.grid(True)
 
         plt.tight_layout()
         plt.show()
