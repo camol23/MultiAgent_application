@@ -17,7 +17,7 @@ testing_exe = False             # Load a Model and disable Traning
 
 # Training Parameters
 num_iterations = 80             # Num. Episodes
-max_steps = 400                 # Max. Steps by Episode
+max_steps = 250                 # Max. Steps by Episode
 
 # --------------------------
 
@@ -65,9 +65,10 @@ actor_1 = networks_a2c_v1_2.ActorNetwork_1(state_dim, action_dim)
 critic_1 = networks_a2c_v1_2.CriticNetwork_1(state_dim)
 
 lr_sheduler_flag = True
-warmup_epochs = int(num_iterations*0.2)
+warmup_epochs = int(num_iterations*0.05)
+lr_rate = 1e-4
 #model.load_newModel(actor_1, critic_1)
-model.load_newModel(actor_1, critic_1, lr_sheduler_flag, warmup_epochs, num_iterations)
+model.load_newModel(actor_1, critic_1, lr_sheduler_flag, warmup_epochs, num_iterations, lr_rate=lr_rate)
 
 
 # load model
@@ -140,7 +141,7 @@ for i in range(0, num_iterations):
     # print(actions_steps)
 
     if not testing_exe :
-        model.training_a2c(states_steps, actions_steps, rewards_steps, vis_flag=True)
+        model.training_a2c(states_steps, actions_steps, rewards_steps, vis_flag=True, clip_grad_flag=True, back_grad_mean=False)
     
 
 

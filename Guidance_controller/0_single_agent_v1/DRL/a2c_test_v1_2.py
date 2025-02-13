@@ -199,7 +199,7 @@ class drl_model:
         self.opt_actor = opt_actor
 
 
-    def TD_target_1(self, rewards_list, gamma, reverse_flag=False):
+    def TD_target_1(self, rewards_list, gamma, reverse_flag=False, norm_flag= False):
         '''
             
             reverse:
@@ -216,9 +216,10 @@ class drl_model:
         if reverse_flag :   
             cum_rewards = np.flip(cum_rewards) 
 
-
+        # Reward Clipping/Normalization
         # Looks like enhance the response
-        cum_rewards = (cum_rewards - cum_rewards.mean()) / (cum_rewards.std() + 1e-8)
+        if norm_flag :
+            cum_rewards = (cum_rewards - cum_rewards.mean()) / (cum_rewards.std() + 1e-8)
 
         return cum_rewards
     
@@ -260,7 +261,7 @@ class drl_model:
         return td_target
 
 
-    def training_a2c(self, states_list, actions_list, rewards_list, vis_flag=False):
+    def training_a2c(self, states_list, actions_list, rewards_list, vis_flag=False, clip_grad_flag=True, back_grad_mean=True):
         '''
             Compute Losses, gradients, and update weigths
 
@@ -274,7 +275,7 @@ class drl_model:
         # actions = torch.tensor(actions_list, dtype=torch.int64).to(device)
         
         # Get cumulative rewards (Return G) in a List
-        td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False)              # Using just rewards
+        td_target = self.TD_target_1(rewards_list, gamma, reverse_flag=False, norm_flag=True)              # Using just rewards
         #td_target = self.TD_target_2(states, rewards_list, gamma)                        # Using Critic network
         td_target = torch.tensor(td_target, dtype=torch.float).to(device)
         
@@ -290,10 +291,15 @@ class drl_model:
             td_target,
             reduction="none")                                               # In this case requires loss.sum() or loss.mean()
         
-        print("Loss Val.shape = ", vf_loss.shape)
+        #print("Loss Val.shape = ", vf_loss.shape)
         self.opt_critic.zero_grad()
-        #vf_loss.sum().backward()
-        vf_loss.mean().backward()
+        if back_grad_mean :
+            vf_loss.mean().backward()
+        else:
+            vf_loss.sum().backward()
+        
+        if clip_grad_flag :
+            torch.nn.utils.clip_grad_norm_(self.critic_model.parameters(), max_norm=0.5)
         self.opt_critic.step()
 
 
@@ -302,8 +308,8 @@ class drl_model:
             values = self.critic_model(states)
 
         advantages = (td_target - values).detach()
-        # advantages = td_target - values
         
+        # Train Actor
         self.actor_model.train()                   # necessary?
         action_probs = self.actor_model(states)
         action_probs = torch.squeeze(action_probs)
@@ -318,15 +324,21 @@ class drl_model:
         else:
             idx_rows = np.arange(len(actions))                               # [0, ... , Total_samples]
             log_probs = torch.log(action_probs[idx_rows, actions])
-            print("idx_rows", idx_rows.shape)
+#            print("idx_rows", idx_rows.shape)
 
-        print("actions", actions.shape)
-        print("action_probs", len(action_probs))    
+
+        #print("actions", actions.shape)
+        #print("action_probs", len(action_probs))    
         pi_loss = -log_probs * advantages
         
         self.opt_actor.zero_grad()
-        # pi_loss.sum().backward()
-        pi_loss.mean().backward()
+        if back_grad_mean :
+            pi_loss.mean().backward()
+        else:
+            pi_loss.sum().backward()        
+
+        if clip_grad_flag :
+            torch.nn.utils.clip_grad_norm_(self.actor_model.parameters(), max_norm=0.5)
         self.opt_actor.step()
 
         # Scheduler
@@ -410,7 +422,7 @@ class drl_model:
         # First ROw
         axes[0, 0].plot(self.reward_records, 'r')
         # axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(self.global_steps_T) + " - " + str(steps) )
-        axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(episodes) + " - " + str(steps) )
+        axes[0, 0].set_title("Sum. rewards by Episode " + str(episodes) + " - Steps " + str(steps) )
 
         axes[0, 1].plot(self.pi_loss_record, 'g')
         axes[0, 1].set_title("Pi. loss")
