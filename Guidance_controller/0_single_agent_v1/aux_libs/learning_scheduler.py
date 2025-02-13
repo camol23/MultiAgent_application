@@ -1,8 +1,8 @@
 import torch
 import torch.optim as optim
+
 import math
 import matplotlib.pyplot as plt
-import numpy as np
 
 class CosineWarmupScheduler:
     def __init__(self, optimizer, warmup_epochs, total_epochs):
@@ -19,44 +19,70 @@ class CosineWarmupScheduler:
         self.total_epochs = total_epochs
         self.current_epoch = 0
         
-        # Store base learning rate
-        self.base_lr = [group['lr'] for group in optimizer.param_groups]
-        
-    def step(self):
-        """Update learning rate based on current epoch"""
-        self.current_epoch += 1
-        
-        for i, group in enumerate(self.optimizer.param_groups):
+        # Store base learning rate for each parameter group
+        self.base_lrs = []
+        for group in optimizer.param_groups:
+            self.base_lrs.append(group['lr'])
+    
+    def get_lr(self):
+        """Calculate learning rates for current epoch"""
+        lrs = []
+        for base_lr in self.base_lrs:
             if self.current_epoch <= self.warmup_epochs:
                 # Linear warmup
-                lr = self.base_lr[i] * (self.current_epoch / self.warmup_epochs)
+                lr = base_lr * (self.current_epoch / self.warmup_epochs)
             else:
                 # Cosine decay
                 progress = (self.current_epoch - self.warmup_epochs) / (self.total_epochs - self.warmup_epochs)
-                lr = self.base_lr[i] * 0.5 * (1 + math.cos(math.pi * progress))
+                lr = base_lr * 0.5 * (1 + math.cos(math.pi * progress))
+            lrs.append(lr)
+        return lrs
+        
+    def step(self):
+        """Update learning rate in optimizer"""
+        # Calculate new learning rates
+        lrs = self.get_lr()
+        
+        # Update learning rate for each parameter group
+        for param_group, lr in zip(self.optimizer.param_groups, lrs):
+            param_group['lr'] = lr
             
-            group['lr'] = lr
+        self.current_epoch += 1
 
-def one_cycle_scheduler(optimizer, max_lr, total_steps, pct_start=0.3, div_factor=25., final_div_factor=1e4):
-    """
-    Creates One Cycle learning rate scheduler.
+
+
+# # Example usage showing the learning rate updates:
+# def example_usage():
+#     # Create a simple model
+#     model = torch.nn.Linear(10, 2)
     
-    Args:
-        optimizer: PyTorch optimizer
-        max_lr: Maximum learning rate
-        total_steps: Total number of training steps
-        pct_start: Percentage of total steps spent in increasing LR
-        div_factor: Initial LR = max_lr/div_factor
-        final_div_factor: Final LR = initial_lr/final_div_factor
-    """
-    return optim.lr_scheduler.OneCycleLR(
-        optimizer,
-        max_lr=max_lr,
-        total_steps=total_steps,
-        pct_start=pct_start,
-        div_factor=div_factor,
-        final_div_factor=final_div_factor
-    )
+#     # Initialize optimizer with multiple parameter groups
+#     optimizer = optim.AdamW([
+#         {'params': model.weight, 'lr': 0.001},
+#         {'params': model.bias, 'lr': 0.002}
+#     ])
+    
+#     # Create scheduler
+#     scheduler = CosineWarmupScheduler(
+#         optimizer=optimizer,
+#         warmup_epochs=5,
+#         total_epochs=30
+#     )
+    
+#     # Training loop example
+#     print("Initial learning rates:", [group['lr'] for group in optimizer.param_groups])
+    
+#     for epoch in range(30):
+#         # Your training code here
+        
+#         # Update scheduler
+#         scheduler.step()
+        
+#         # Print current learning rates
+#         current_lrs = [group['lr'] for group in optimizer.param_groups]
+#         print(f"Epoch {epoch + 1}, Learning rates: {current_lrs}")
+
+
 
 def plot_lr_schedule(scheduler, steps):
     """
@@ -78,26 +104,3 @@ def plot_lr_schedule(scheduler, steps):
     plt.ylabel('Learning Rate')
     plt.grid(True)
     plt.show()
-
-
-# Initialize
-# model = YourModel()
-# optimizer = optim.AdamW(model.parameters(), lr=0.001)
-# scheduler = CosineWarmupScheduler(optimizer, warmup_epochs=5, total_epochs=30)
-
-# # Training loop
-# for epoch in range(num_epochs):
-#     train_one_epoch(model, optimizer)
-#     scheduler.step()
-
-# scheduler = one_cycle_scheduler(
-#     optimizer,
-#     max_lr=0.01,
-#     total_steps=len(train_dataloader) * num_epochs
-# )
-
-# # Training loop
-# for epoch in range(num_epochs):
-#     for batch in train_dataloader:
-#         train_step(model, batch, optimizer)
-#         scheduler.step()

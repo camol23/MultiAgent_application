@@ -5,6 +5,13 @@ from torch.nn import functional as F
 import numpy as np
 import matplotlib.pyplot as plt
 
+import sys
+import os
+from aux_libs import learning_scheduler
+from aux_libs import store_model
+
+sys.path.insert(0, '/home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1')
+
 '''
     Training Algorithm follows the fundamental 
     Asynchronous Advantage Actor-Critic from : 
@@ -90,8 +97,18 @@ class drl_model:
         self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.001)
         self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
 
+        # Sheduler
+        self.lr_rate = 0.001
+        self.sheduler_flag = False
+        self.scheduler_actor = None
+        self.scheduler_critic = None
+
         # general
         self.stop_condition_flag = 0
+        self.best_return = 0
+        self.folder_path = ""
+        self.checkpoint_counter = 0
+    
 
         # record lists
         self.reward_records = []
@@ -101,13 +118,28 @@ class drl_model:
         self.val_loss_record = []
         self.advantage_record = []
 
+        self.lr_actor_record = []
+        self.lr_critic_record = []
 
-    def load_newModel(self, actor, critic):
+
+    def load_newModel(self, actor, critic, lr_sheduler_flag=False, warmup_epochs=5, total_epochs=30, lr_rate=0):
+        
         self.actor_model = actor.to(device)
         self.critic_model = critic.to(device)
 
-        self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.001)
-        self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=0.001)
+        # Optimizer
+        if lr_rate == 0 :
+            lr_rate = self.lr_rate
+        
+        self.opt_actor = torch.optim.AdamW(self.actor_model.parameters(), lr=lr_rate)
+        self.opt_critic = torch.optim.AdamW(self.critic_model.parameters(), lr=0.5*lr_rate)
+        
+        if lr_sheduler_flag :
+            self.sheduler_flag = True
+
+            self.scheduler_actor = learning_scheduler.CosineWarmupScheduler(self.opt_actor, warmup_epochs, total_epochs)
+            self.scheduler_critic = learning_scheduler.CosineWarmupScheduler(self.opt_critic, warmup_epochs, total_epochs)
+
 
         print("Model Updated ...")
     
@@ -185,7 +217,7 @@ class drl_model:
             cum_rewards = np.flip(cum_rewards) 
 
 
-        # Looks like an improvement
+        # Looks like enhance the response
         cum_rewards = (cum_rewards - cum_rewards.mean()) / (cum_rewards.std() + 1e-8)
 
         return cum_rewards
@@ -286,9 +318,9 @@ class drl_model:
         else:
             idx_rows = np.arange(len(actions))                               # [0, ... , Total_samples]
             log_probs = torch.log(action_probs[idx_rows, actions])
-            print("idx_rows", idx_rows)
+            print("idx_rows", idx_rows.shape)
 
-        print("actions", actions)
+        print("actions", actions.shape)
         print("action_probs", len(action_probs))    
         pi_loss = -log_probs * advantages
         
@@ -297,6 +329,15 @@ class drl_model:
         pi_loss.mean().backward()
         self.opt_actor.step()
 
+        # Scheduler
+        if self.sheduler_flag :
+            self.scheduler_actor.step()
+            self.scheduler_critic.step()
+
+            lr_actor_item = self.scheduler_actor.optimizer.param_groups[0]['lr']
+            lr_critic_item = self.scheduler_critic.optimizer.param_groups[0]['lr']
+            self.lr_actor_record.append(lr_actor_item)
+            self.lr_critic_record.append(lr_critic_item)
 
         # stop if reward mean > 475.0
         # self.stop_condition()
@@ -313,6 +354,11 @@ class drl_model:
         self.pi_loss_record.append( pi_loss_mean )
         self.val_loss_record.append( val_loss_mean )
         self.advantage_record.append( advantage_mean )
+
+        # Save Checkpoint
+        if total_iter_rewars > self.best_return :
+            self.save_checkpoint()
+            self.best_return = total_iter_rewars
 
         # Visualization
         print()
@@ -361,21 +407,27 @@ class drl_model:
         # Create figure and subplots
         fig, axes = plt.subplots(2, 3, figsize=(12, 4))
 
-        # First plot
+        # First ROw
         axes[0, 0].plot(self.reward_records, 'r')
         # axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(self.global_steps_T) + " - " + str(steps) )
         axes[0, 0].set_title("Sum. rewards by Episode - Epochs " + str(episodes) + " - " + str(steps) )
 
-        # Second plot
         axes[0, 1].plot(self.pi_loss_record, 'g')
         axes[0, 1].set_title("Pi. loss")
 
-        # Third plot
         axes[0, 2].plot(self.val_loss_record, 'b')
         axes[0, 2].set_title("Vsal. loss")
 
+        # Second Row
         axes[1, 0].plot(self.advantage_record, 'b')
         axes[1, 0].set_title("Advanage mean")
+
+        axes[1, 1].plot(self.lr_actor_record, 'r')
+        axes[1, 1].set_title("Lr. Actor")
+
+        axes[1, 2].plot(self.lr_critic_record, 'r')
+        axes[1, 2].set_title("Lr. Critic")
+        
 
         # Adjust layout
         for axe in axes:
@@ -385,3 +437,34 @@ class drl_model:
 
         plt.tight_layout()
         plt.show()
+
+
+    def save_checkpoint(self):
+
+        # Count the Total of Folders
+        checkpoint_path = './Guidance_controller/0_single_agent_v1/DRL/storage/checkpoints/model_v1_2'    
+        if self.checkpoint_counter == 0 :
+
+            checkpoint_folders = [name for name in os.listdir(checkpoint_path) ]
+            num_folders = len(checkpoint_folders)
+            num_folders = num_folders + 1 
+
+            # Create the folder for the current test
+            folder_name = '/model_v1_2_test_' + str(num_folders)
+            self.folder_path = checkpoint_path+folder_name
+            os.makedirs(self.folder_path)
+        
+        # Independent Folders
+        actor_path = self.folder_path + '/actor_v1_2'
+        critic_path = self.folder_path +  '/critic_v1_2'
+
+        # Name equ = file_name + str(episode) + ".pt"
+        file_name_actor = "checkpoint_episode_" + str(self.global_steps_T) + "_reward_" 
+        file_name_critic = "checkpoint_episode_" + str(self.global_steps_T) + "_reward_" 
+        
+        store_model.save_model(self.actor_model, self.opt_actor, self.reward_records[-1], self.reward_records, actor_path, file_name_actor)
+        store_model.save_model(self.critic_model, self.opt_critic, self.reward_records[-1], self.reward_records[-1], critic_path, file_name_critic)
+        
+
+        self.checkpoint_counter += 1 
+        print("Saved as = ", actor_path + "/" + file_name_actor)

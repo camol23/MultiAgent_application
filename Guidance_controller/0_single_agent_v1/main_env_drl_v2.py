@@ -7,14 +7,17 @@ from DRL import a2c_test_v1_2
 from aux_libs import store_model
 from DRL.networks import networks_a2c_v1_2
 
-# sys.path.insert(0, '/home/camilo/Documents/repos/MultiAgent_application/Guidance_controller/0_single_agent_v1')
 
 
 # ----- Execution Type -----
 
-testing_exe = False     # Load a Model and disable Traning 
-#training_exe = True
+testing_exe = False             # Load a Model and disable Traning 
+#training_exe = True            
 #store_flag = False
+
+# Training Parameters
+num_iterations = 80             # Num. Episodes
+max_steps = 400                 # Max. Steps by Episode
 
 # --------------------------
 
@@ -41,6 +44,7 @@ map_settings = {
 # Initialize Environment
 env = env_v1.Environment(map_settings, agents_settings, training_flag=True)
 env.initialize()
+env.max_steps = max_steps
 
 # goal_pos = (700, 300) #(1000, 200)
 goal_pos = (220, 480)
@@ -53,11 +57,17 @@ print("Start point = ", path[0, -2], path[1, -2])
 # DRL model
 model = a2c_test_v1_2.drl_model()
 
+# Load a new Model 
+# (It should be in a init. Function )
 state_dim = 2
 action_dim = 3
 actor_1 = networks_a2c_v1_2.ActorNetwork_1(state_dim, action_dim)
 critic_1 = networks_a2c_v1_2.CriticNetwork_1(state_dim)
-model.load_newModel(actor_1, critic_1)
+
+lr_sheduler_flag = True
+warmup_epochs = int(num_iterations*0.2)
+#model.load_newModel(actor_1, critic_1)
+model.load_newModel(actor_1, critic_1, lr_sheduler_flag, warmup_epochs, num_iterations)
 
 
 # load model
@@ -83,12 +93,6 @@ if testing_exe :
     model.critic_model, opt_critic, last_episode, reward_history = store_model.load_model(model.critic_model, model.opt_critic, critic_path)
 
     model.load_optimizers(opt_actor, opt_critic)
-
-
-
-# Training Parameters
-num_iterations = 80
-env.max_steps = 600
 
 
 

@@ -5,7 +5,7 @@ import os
 
 
 
-def save_model(model, optimizer, episode, reward_history, path="checkpoints"):
+def save_model(model, optimizer, episode, reward_history, path="checkpoints", file_name="checkpoint_episode_"):
     """
         Save the DRL model, optimizer state, and training history
         
@@ -26,7 +26,8 @@ def save_model(model, optimizer, episode, reward_history, path="checkpoints"):
         'reward_history': reward_history
     }
     
-    checkpoint_path = os.path.join(path, f'checkpoint_episode_{episode}.pt')
+    # checkpoint_path = os.path.join(path, f'checkpoint_episode_{episode}.pt')
+    checkpoint_path = os.path.join(path, file_name + str(episode) + ".pt")
     torch.save(checkpoint, checkpoint_path)
     print(f"Model saved to {checkpoint_path}")
 
